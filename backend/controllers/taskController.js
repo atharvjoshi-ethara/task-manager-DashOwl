@@ -41,9 +41,21 @@ exports.createTask = async (req, res) => {
         });
       } catch (notiError) {
         console.error('Notification creation failed in createTask:', notiError);
-        // We don't want to fail the whole request if notification fails, 
-        // but it's good to have this try/catch.
       }
+    }
+
+    // DEBUG: Send a system notification to the creator to verify the system works
+    try {
+      await Notification.create({
+        recipient: req.user._id,
+        sender: req.user._id,
+        type: 'SYSTEM',
+        title: 'Task Created Successfully',
+        message: `Task "${title}" was created and assigned.`,
+        relatedId: task._id
+      });
+    } catch (debugError) {
+      console.error('Debug notification failed:', debugError);
     }
     
     res.status(201).json(task);
