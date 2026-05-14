@@ -2,9 +2,20 @@ const Notification = require('../models/Notification');
 
 exports.getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipient: req.user._id })
+    const userId = req.user._id;
+    // Find notifications where recipient matches current user
+    let notifications = await Notification.find({ recipient: userId })
       .sort({ createdAt: -1 })
       .limit(20);
+    
+    // DEBUG: If no notifications, check if ANY exist at all to verify DB connectivity
+    if (notifications.length === 0) {
+        const anyExist = await Notification.findOne();
+        if (!anyExist) {
+            console.log("CRITICAL: No notifications exist in the entire database.");
+        }
+    }
+
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ message: error.message });

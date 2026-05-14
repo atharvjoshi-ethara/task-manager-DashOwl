@@ -2,9 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.PROD 
-  ? '/api' 
-  : 'http://localhost:5000/api';
+const API_URL = '/api';
 
 export const loginUser = createAsyncThunk('auth/login', async ({ email, password }, thunkAPI) => {
   try {
