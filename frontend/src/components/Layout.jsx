@@ -20,6 +20,13 @@ const Layout = () => {
   React.useEffect(() => {
     if (user) {
       dispatch(fetchNotifications());
+      
+      // Add polling to check for new notifications every 30 seconds
+      const interval = setInterval(() => {
+        dispatch(fetchNotifications());
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [dispatch, user]);
 

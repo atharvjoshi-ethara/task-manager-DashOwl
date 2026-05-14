@@ -74,10 +74,38 @@ exports.updateTask = async (req, res) => {
     // If Admin or assigned user or project member or creator, can update
     // If Admin or assigned user or project creator, can update
     if (req.user.role === 'Admin' || isAssigned || isProjectCreator) {
-        const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true })
             .populate('assignedTo', 'name email avatar')
             .populate('createdBy', 'name')
             .populate('comments.user', 'name avatar');
+
+        // Notification logic for updateTask
+        if (req.body.assignedTo && req.body.assignedTo.toString() !== task.assignedTo?.toString()) {
+            // Only send if it's not the user assigning to themselves
+            if (req.body.assignedTo.toString() !== req.user._id.toString()) {
+                await Notification.create({
+                    recipient: req.body.assignedTo,
+                    sender: req.user._id,
+                    type: 'TASK_ASSIGNED',
+                    title: 'Task Assigned/Updated',
+                    message: `You have been assigned to or updated on task: ${updatedTask.title}`,
+                    relatedId: updatedTask._id
+                });
+            }
+        } else if (req.body.status && req.body.status !== task.status) {
+            // Notify assignee if status changed by someone else
+            if (updatedTask.assignedTo && updatedTask.assignedTo._id.toString() !== req.user._id.toString()) {
+                await Notification.create({
+                    recipient: updatedTask.assignedTo._id,
+                    sender: req.user._id,
+                    type: 'TASK_UPDATED',
+                    title: 'Task Status Updated',
+                    message: `The status of task "${updatedTask.title}" has been updated to ${req.body.status}`,
+                    relatedId: updatedTask._id
+                });
+            }
+        }
+
         res.json(updatedTask);
     } else {
         res.status(403).json({ message: 'Not authorized: Only the assignee, project creator, or admin can update this task.' });
