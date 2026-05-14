@@ -8,6 +8,17 @@ import { formatDistanceToNow } from 'date-fns';
 const NotificationPanel = ({ onClose }) => {
   const dispatch = useDispatch();
   const { notifications, loading } = useSelector((state) => state.notifications);
+  const panelRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
 
   const handleMarkAsRead = (id) => {
     dispatch(markAsRead(id));
@@ -19,6 +30,7 @@ const NotificationPanel = ({ onClose }) => {
 
   return (
     <motion.div
+      ref={panelRef}
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
