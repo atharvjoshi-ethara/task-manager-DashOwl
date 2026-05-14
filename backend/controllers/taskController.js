@@ -29,15 +29,21 @@ exports.createTask = async (req, res) => {
     task = await Task.findById(task._id).populate('assignedTo', 'name email avatar');
     
     // Send Notification to assigned user
-    if (assignedTo && assignedTo.toString() !== req.user._id.toString()) {
-      await Notification.create({
-        recipient: assignedTo,
-        sender: req.user._id,
-        type: 'TASK_ASSIGNED',
-        title: 'New Task Assigned',
-        message: `You have been assigned a new task: ${title}`,
-        relatedId: task._id
-      });
+    if (assignedTo && String(assignedTo) !== String(req.user._id)) {
+      try {
+        await Notification.create({
+          recipient: assignedTo,
+          sender: req.user._id,
+          type: 'TASK_ASSIGNED',
+          title: 'New Task Assigned',
+          message: `You have been assigned a new task: ${title}`,
+          relatedId: task._id
+        });
+      } catch (notiError) {
+        console.error('Notification creation failed in createTask:', notiError);
+        // We don't want to fail the whole request if notification fails, 
+        // but it's good to have this try/catch.
+      }
     }
     
     res.status(201).json(task);
@@ -80,30 +86,41 @@ exports.updateTask = async (req, res) => {
             .populate('comments.user', 'name avatar');
 
         // Notification logic for updateTask
-        if (req.body.assignedTo && req.body.assignedTo.toString() !== task.assignedTo?.toString()) {
-            // Only send if it's not the user assigning to themselves
-            if (req.body.assignedTo.toString() !== req.user._id.toString()) {
-                await Notification.create({
-                    recipient: req.body.assignedTo,
-                    sender: req.user._id,
-                    type: 'TASK_ASSIGNED',
-                    title: 'Task Assigned/Updated',
-                    message: `You have been assigned to or updated on task: ${updatedTask.title}`,
-                    relatedId: updatedTask._id
-                });
+        try {
+            // Case 1: Task Reassigned
+            const newAssignee = req.body.assignedTo;
+            const oldAssignee = task.assignedTo;
+
+            if (newAssignee && String(newAssignee) !== String(oldAssignee)) {
+                // Only send if it's not the user assigning to themselves
+                if (String(newAssignee) !== String(req.user._id)) {
+                    await Notification.create({
+                        recipient: newAssignee,
+                        sender: req.user._id,
+                        type: 'TASK_ASSIGNED',
+                        title: 'Task Assigned/Updated',
+                        message: `You have been assigned to or updated on task: ${updatedTask.title}`,
+                        relatedId: updatedTask._id
+                    });
+                }
+            } 
+            
+            // Case 2: Status Updated (and not reassigned)
+            else if (req.body.status && req.body.status !== task.status) {
+                // Notify assignee if status changed by someone else
+                if (updatedTask.assignedTo && String(updatedTask.assignedTo._id) !== String(req.user._id)) {
+                    await Notification.create({
+                        recipient: updatedTask.assignedTo._id,
+                        sender: req.user._id,
+                        type: 'TASK_UPDATED',
+                        title: 'Task Status Updated',
+                        message: `The status of task "${updatedTask.title}" has been updated to ${req.body.status}`,
+                        relatedId: updatedTask._id
+                    });
+                }
             }
-        } else if (req.body.status && req.body.status !== task.status) {
-            // Notify assignee if status changed by someone else
-            if (updatedTask.assignedTo && updatedTask.assignedTo._id.toString() !== req.user._id.toString()) {
-                await Notification.create({
-                    recipient: updatedTask.assignedTo._id,
-                    sender: req.user._id,
-                    type: 'TASK_UPDATED',
-                    title: 'Task Status Updated',
-                    message: `The status of task "${updatedTask.title}" has been updated to ${req.body.status}`,
-                    relatedId: updatedTask._id
-                });
-            }
+        } catch (notiError) {
+            console.error('Notification creation failed in updateTask:', notiError);
         }
 
         res.json(updatedTask);
