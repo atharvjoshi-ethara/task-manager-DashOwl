@@ -15,6 +15,15 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = React.useState(false);
 
+  React.useEffect(() => {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (storedTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   React.useEffect(() => {
@@ -65,7 +74,7 @@ const Layout = () => {
       >
         <div className="p-6 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gradient flex items-center gap-2">
-            <FiCheckCircle className="text-primary" /> TaskFlow
+            <FiCheckCircle className="text-primary" /> DashOwl
           </h1>
           <button className="md:hidden text-textMuted p-2 hover:bg-textMain/5 rounded-lg" onClick={() => setIsSidebarOpen(false)}>
             <FiX size={24} />

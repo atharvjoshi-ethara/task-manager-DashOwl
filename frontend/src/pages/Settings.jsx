@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfile, deleteAccount, upgradeAccount } from '../store/authSlice';
 import { motion } from 'framer-motion';
@@ -16,14 +16,18 @@ const Settings = () => {
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [adminCode, setAdminCode] = useState('');
   
-  const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme');
+    const initialTheme = storedTheme || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+    setTheme(initialTheme);
+  }, []);
 
   const toggleTheme = (newTheme) => {
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    localStorage.setItem('theme', newTheme);
     setTheme(newTheme);
   };
 
@@ -53,9 +57,11 @@ const Settings = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 md:p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-textMain">Settings</h1>
-      
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 md:p-6 max-w-4xl mx-auto space-y-6 bg-surface/70 rounded-3xl border border-textMain/10 shadow-sm">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-textMain">Settings</h1>
+        <p className="text-sm text-textMuted">Manage your profile, preferences, and account settings in one place.</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Form */}
         <div className="md:col-span-2 glass rounded-2xl p-6 border border-textMain/10 shadow-xl">
@@ -109,7 +115,7 @@ const Settings = () => {
         {/* Preferences */}
         <div className="space-y-6">
           {user?.role === 'Member' && (
-            <div className="glass rounded-2xl p-6 border border-primary/20 shadow-xl bg-primary/5">
+            <div className="glass rounded-3xl p-6 border border-primary/20 shadow-xl bg-primary/10">
               <h2 className="text-lg font-semibold text-primary flex items-center gap-2 mb-4">
                 <FiShield /> Upgrade to Admin
               </h2>
@@ -172,7 +178,7 @@ const Settings = () => {
       </div>
 
       {/* Danger Zone */}
-      <div className="glass rounded-2xl p-6 border border-danger/20 shadow-xl bg-danger/5">
+      <div className="glass rounded-3xl p-6 border-l-4 border-danger/20 shadow-xl bg-danger/10">
         <h2 className="text-lg font-semibold text-danger flex items-center gap-2 mb-4">
           <FiAlertTriangle /> Danger Zone
         </h2>

@@ -42,22 +42,24 @@ const Team = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 md:p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-textMain">Team Directory</h1>
-          <p className="text-sm text-textMuted">Manage all members of your organization.</p>
-        </div>
-        <button 
+      <div className="glass rounded-3xl p-6 border border-textMain/10 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-textMain">Team Directory</h1>
+            <p className="text-sm text-textMuted">Manage all members of your organization.</p>
+          </div>
+          <button 
           onClick={() => setShowInvite(true)}
           className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
         >
           Invite Member
         </button>
       </div>
+    </div>
 
-      <div className="glass rounded-2xl overflow-hidden border border-textMain/10">
+      <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-separate border-spacing-y-3 min-w-[600px]">
             <thead>
               <tr className="bg-textMain/5 border-b border-textMain/10">
                 <th className="p-4 text-sm font-semibold text-textMuted">Member</th>

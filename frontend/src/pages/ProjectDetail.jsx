@@ -86,33 +86,44 @@ const ProjectDetail = () => {
   return (
     <div className="space-y-6 flex flex-col min-h-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-        <div>
-          <Link to="/projects" className="inline-flex items-center gap-1 text-sm text-textMuted hover:text-primary mb-2 transition-colors">
+      <div className="glass rounded-3xl border border-textMain/10 p-6 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+        <div className="space-y-4">
+          <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-textMuted hover:text-primary mb-2 transition-colors">
             <FiArrowLeft /> Back to Projects
           </Link>
-          <h1 className="text-2xl font-bold textMain">{currentProject.name}</h1>
-          <p className="text-sm text-textMuted">{currentProject.description}</p>
-          
-          <div className="flex items-center gap-2 mt-4">
-             <span className="text-sm text-textMuted mr-2">Team Progress:</span>
-             <div className="flex -space-x-2">
-               {currentProject.members?.map(member => (
-                  <Link 
-                    key={member._id} 
-                    to={`/projects/${id}/member/${member._id}/progress`} 
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold textMain">{currentProject.name}</h1>
+            <p className="text-sm text-textMuted max-w-2xl">{currentProject.description}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Team Members</p>
+              <p className="text-xl font-semibold text-textMain">{currentProject.members?.length || 0}</p>
+            </div>
+            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Tasks</p>
+              <p className="text-xl font-semibold text-textMain">{tasks.length}</p>
+            </div>
+            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Members</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {currentProject.members?.map(member => (
+                  <Link
+                    key={member._id}
+                    to={`/projects/${id}/member/${member._id}/progress`}
                     title={`${member.name}'s Progress`}
                     className="relative z-0 hover:z-10"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs ring-2 ring-background hover:scale-110 transition-transform shadow-md">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm">
                       {member.name.charAt(0).toUpperCase()}
                     </div>
                   </Link>
-               ))}
-             </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 justify-end">
           {user?.role === 'Admin' && (
             <>
               <button 
@@ -148,36 +159,39 @@ const ProjectDetail = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-textMain/10">
-        <button 
-          onClick={() => setActiveTab('board')}
-          className={`px-6 py-2 font-medium transition-colors border-b-2 ${activeTab === 'board' ? 'border-primary text-primary' : 'border-transparent text-textMuted hover:text-textMain'}`}
-        >
-          Kanban Board
-        </button>
-        <button 
-          onClick={() => setActiveTab('progress')}
-          className={`px-6 py-2 font-medium transition-colors border-b-2 ${activeTab === 'progress' ? 'border-primary text-primary' : 'border-transparent text-textMuted hover:text-textMain'}`}
-        >
-          Team Progress
-        </button>
-        {/* View Mode Switcher (only for members) */}
-        {user?.role !== 'Admin' && activeTab === 'board' && (
-          <div className="flex items-center gap-2 mt-6 p-1 bg-surface/50 rounded-xl w-fit border border-textMain/10">
+      <div className="flex flex-col gap-4 rounded-3xl border border-textMain/10 bg-surface/70 p-2 sm:p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex overflow-hidden rounded-3xl bg-white/90 shadow-sm">
             <button 
-              onClick={() => setViewMode('my-tasks')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'my-tasks' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+              onClick={() => setActiveTab('board')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'board' ? 'bg-primary text-white' : 'text-textMuted hover:text-textMain'}`}
             >
-              My Tasks
+              Kanban Board
             </button>
             <button 
-              onClick={() => setViewMode('team-board')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team-board' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+              onClick={() => setActiveTab('progress')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'progress' ? 'bg-primary text-white' : 'text-textMuted hover:text-textMain'}`}
             >
-              Team Board
+              Team Progress
             </button>
           </div>
-        )}
+          {user?.role !== 'Admin' && activeTab === 'board' && (
+            <div className="flex items-center gap-2 p-1 bg-surface/50 rounded-2xl border border-textMain/10">
+              <button 
+                onClick={() => setViewMode('my-tasks')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'my-tasks' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+              >
+                My Tasks
+              </button>
+              <button 
+                onClick={() => setViewMode('team-board')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team-board' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+              >
+                Team Board
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {activeTab === 'board' ? (
@@ -192,7 +206,7 @@ const ProjectDetail = () => {
               return matchesStatus;
             });
             return (
-              <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-surface/30 rounded-2xl border border-textMain/10 p-3 sm:p-4">
+              <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${
@@ -273,9 +287,9 @@ const ProjectDetail = () => {
       </div>
       ) : (
         <div className="flex-1 space-y-6">
-          <div className="glass rounded-2xl overflow-hidden border border-textMain/10">
+          <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              <table className="w-full text-left border-separate border-spacing-y-3 min-w-[700px]">
               <thead>
                 <tr className="bg-textMain/5 border-b border-textMain/10">
                   <th className="p-4 text-sm font-semibold text-textMuted">Member</th>

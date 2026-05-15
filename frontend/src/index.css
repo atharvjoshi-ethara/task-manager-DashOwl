@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --bg-main: 248 250 252;
+    --bg-main: 229 231 235;
     --bg-surface: 255 255 255;
     --text-main: 15 23 42;
-    --text-muted: 100 116 139;
+    --text-muted: 71 85 105;
   }
   
   :root.dark {
