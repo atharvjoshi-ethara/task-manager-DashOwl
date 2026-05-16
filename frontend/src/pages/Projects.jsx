@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProjects, createProject, deleteProject } from '../store/projectSlice';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiPlus, FiFolder, FiUsers, FiTrash2 } from 'react-icons/fi';
 
@@ -9,10 +9,19 @@ const Projects = () => {
   const { user, token } = useSelector((state) => state.auth);
   const { projects, isLoading } = useSelector((state) => state.project);
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
   
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const searchQuery = searchParams.get('search')?.trim().toLowerCase() || '';
+  const filteredProjects = searchQuery
+    ? projects.filter(project => {
+        const projectName = project.name?.toLowerCase() || '';
+        const projectDescription = project.description?.toLowerCase() || '';
+        return projectName.includes(searchQuery) || projectDescription.includes(searchQuery);
+      })
+    : projects;
 
   useEffect(() => {
     if (token) dispatch(fetchProjects());
@@ -57,7 +66,7 @@ const Projects = () => {
         <p className="text-textMuted">Loading projects...</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {projects.map((p, i) => (
+          {filteredProjects.map((p, i) => (
             <motion.div 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               key={p._id}
@@ -90,10 +99,12 @@ const Projects = () => {
             </motion.div>
           ))}
           
-          {projects.length === 0 && (
+          {filteredProjects.length === 0 && (
             <div className="col-span-full py-12 text-center glass rounded-2xl border-dashed">
               <FiFolder className="text-4xl text-textMuted mx-auto mb-3" />
-              <p className="text-textMuted">No projects found.</p>
+              <p className="text-textMuted">
+                {searchQuery ? 'No projects match your search.' : 'No projects found.'}
+              </p>
             </div>
           )}
         </div>

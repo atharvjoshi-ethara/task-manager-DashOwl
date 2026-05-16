@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { FiHome, FiFolder, FiLogOut, FiMenu, FiX, FiCheckCircle, FiSearch, FiBell, FiSettings, FiUsers } from 'react-icons/fi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
@@ -12,8 +12,10 @@ const Layout = () => {
   const { notifications } = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   React.useEffect(() => {
     const storedTheme = localStorage.getItem('theme');
@@ -42,6 +44,32 @@ const Layout = () => {
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  React.useEffect(() => {
+    if (location.pathname !== '/projects') {
+      setSearchQuery('');
+      return;
+    }
+
+    const params = new URLSearchParams(location.search);
+    setSearchQuery(params.get('search') || '');
+  }, [location.pathname, location.search]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (location.pathname === '/projects') {
+      const query = value.trim();
+      navigate(query ? `/projects?search=${encodeURIComponent(query)}` : '/projects', { replace: true });
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/projects?search=${encodeURIComponent(query)}` : '/projects');
   };
 
   const navLinks = [
@@ -131,10 +159,19 @@ const Layout = () => {
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-textMain p-2 hover:bg-textMain/5 rounded-lg">
               <FiMenu size={24} />
             </button>
-            <div className="hidden sm:flex items-center bg-background border border-textMain/10 rounded-full px-4 py-2 w-48 lg:w-64 focus-within:border-primary transition-all">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden sm:flex items-center bg-background border border-textMain/10 rounded-full px-4 py-2 w-48 lg:w-64 focus-within:border-primary transition-all"
+            >
               <FiSearch className="text-textMuted mr-2" />
-              <input type="text" placeholder="Search..." className="bg-transparent text-sm w-full outline-none text-textMain placeholder-textMuted" />
-            </div>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search projects..."
+                className="bg-transparent text-sm w-full outline-none text-textMain placeholder-textMuted"
+              />
+            </form>
           </div>
           <div className="flex items-center gap-2 md:gap-4 relative">
             <button 
