@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { fetchProjectDetails, createTask, updateTaskStatus, addMemberToProject, deleteProject } from '../store/projectSlice';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -82,13 +82,38 @@ const ProjectDetail = () => {
 
   if (isLoading || !currentProject) return <div className="p-8 text-textMuted">Loading project details...</div>;
 
-  const columns = ['Todo', 'In Progress', 'Review', 'Done'];
-  const projectMembers = [
+  const columns = useMemo(() => ['Todo', 'In Progress', 'Review', 'Done'], []);
+
+  const projectMembers = useMemo(() => [
     ...(currentProject.members || []),
     ...(currentProject.createdBy?._id && !(currentProject.members || []).some(member => member._id === currentProject.createdBy._id)
       ? [currentProject.createdBy]
       : [])
-  ];
+  ], [currentProject]);
+
+  const filteredTasks = useMemo(() => {
+    if (viewMode === 'my-tasks') {
+      return tasks.filter(task => task.assignedTo?._id === user?._id);
+    }
+    return tasks;
+  }, [tasks, viewMode, user?._id]);
+
+  const tasksByStatus = useMemo(() => {
+    return columns.reduce((result, status) => {
+      result[status] = filteredTasks.filter(task => task.status === status);
+      return result;
+    }, {});
+  }, [columns, filteredTasks]);
+
+  const memberTasksMap = useMemo(() => {
+    return filteredTasks.reduce((map, task) => {
+      const memberId = task.assignedTo?._id;
+      if (!memberId) return map;
+      if (!map[memberId]) map[memberId] = [];
+      map[memberId].push(task);
+      return map;
+    }, {});
+  }, [filteredTasks]);
 
   return (
     <div className="space-y-6 flex flex-col min-h-full">
@@ -236,13 +261,7 @@ const ProjectDetail = () => {
         <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex gap-4 md:gap-6 min-w-max h-full">
           {columns.map(status => {
-            const colTasks = tasks.filter(t => {
-              const matchesStatus = t.status === status;
-              if (viewMode === 'my-tasks') {
-                return matchesStatus && t.assignedTo?._id === user?._id;
-              }
-              return matchesStatus;
-            });
+            const colTasks = tasksByStatus[status] || [];
             return (
               <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm text-black">
                 <div className="flex items-center justify-between mb-4">
@@ -261,8 +280,7 @@ const ProjectDetail = () => {
                   {colTasks.map(task => {
                     const overdue = task.status !== 'Done' && task.dueDate && isPast(parseISO(task.dueDate));
                     return (
-                      <motion.div 
-                        layoutId={task._id}
+                      <div 
                         key={task._id}
                         onClick={() => setSelectedTaskId(task._id)}
                         className={`glass p-4 rounded-xl cursor-pointer border-l-4 hover:bg-surface/80 transition-colors ${
@@ -314,7 +332,7 @@ const ProjectDetail = () => {
                             </button>
                           )}
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
@@ -338,7 +356,7 @@ const ProjectDetail = () => {
               </thead>
               <tbody>
                 {projectMembers.length > 0 ? projectMembers.map(member => {
-                  const memberTasks = tasks.filter(t => t.assignedTo?._id === member._id);
+                  const memberTasks = memberTasksMap[member._id] || [];
                   const completed = memberTasks.filter(t => t.status === 'Done').length;
                   const total = memberTasks.length;
                   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
