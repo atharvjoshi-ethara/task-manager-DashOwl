@@ -155,9 +155,15 @@ const Layout = () => {
               )}
             </AnimatePresence>
 
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-sm shrink-0">
-                {user?.name?.charAt(0).toUpperCase()}
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/settings')}
+              aria-label="Open account settings"
+              title="Account settings"
+              className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-sm shrink-0 hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary transition"
+            >
+              {user?.name?.charAt(0).toUpperCase()}
+            </button>
           </div>
         </header>
 
