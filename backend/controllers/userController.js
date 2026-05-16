@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Project = require('../models/Project');
+const Task = require('../models/Task');
 const bcrypt = require('bcryptjs');
 
 exports.getUsers = async (req, res) => {
@@ -34,6 +36,32 @@ exports.updateProfile = async (req, res) => {
       avatar: updatedUser.avatar,
       token: req.headers.authorization.split(' ')[1] // Keep existing token
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (userId === req.user._id.toString()) {
+      return res.status(400).json({ message: 'You cannot delete your own account from Team Directory' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const userProjects = await Project.find({ createdBy: userId });
+    const projectIds = userProjects.map(project => project._id);
+
+    await Task.deleteMany({ project: { $in: projectIds } });
+    await Project.deleteMany({ createdBy: userId });
+    await Project.updateMany({ members: userId }, { $pull: { members: userId } });
+    await Task.updateMany({ assignedTo: userId }, { $unset: { assignedTo: '' } });
+    await User.deleteOne({ _id: userId });
+
+    res.json({ message: 'Team member deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiShield, FiTrash2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
@@ -29,6 +30,27 @@ const Team = () => {
     if (user?.role === 'Admin') fetchTeam();
     else setIsLoading(false);
   }, [token, user]);
+
+  const handleDeleteMember = async (member) => {
+    if (member._id === user?._id) {
+      toast.error('You cannot delete your own account from Team Directory.');
+      return;
+    }
+
+    if (!window.confirm(`Delete ${member.name}? This will remove their account and project memberships.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/users/${member._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTeam(prevTeam => prevTeam.filter(teamMember => teamMember._id !== member._id));
+      toast.success('Team member deleted successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete team member');
+    }
+  };
 
   if (user?.role !== 'Admin') {
     return (
@@ -97,7 +119,13 @@ const Team = () => {
                     {new Date(member.createdAt).toLocaleDateString()}
                   </td>
                   <td className="p-4 text-right">
-                    <button className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMember(member)}
+                      disabled={member._id === user?._id}
+                      title={member._id === user?._id ? 'You cannot delete your own account here' : `Delete ${member.name}`}
+                      className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
                       <FiTrash2 />
                     </button>
                   </td>
@@ -115,9 +143,7 @@ const Team = () => {
             <h2 className="text-xl font-bold mb-4 text-textMain">Invite New Member</h2>
             <form onSubmit={(e) => {
               e.preventDefault();
-              import('react-hot-toast').then(({ default: toast }) => {
-                toast.success(`Invitation sent to ${inviteEmail}!`);
-              });
+              toast.success(`Invitation sent to ${inviteEmail}!`);
               setShowInvite(false);
               setInviteEmail('');
             }} className="space-y-4">
