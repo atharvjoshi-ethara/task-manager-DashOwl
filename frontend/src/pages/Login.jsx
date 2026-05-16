@@ -49,8 +49,8 @@ const Login = () => {
                     <FiCheckCircle className="text-2xl text-white" />
                   </div>
                   <div>
-                    <p className="text-3xl font-semibold">DashOwl</p>
-                    <p className="text-sm text-white/70">Your task dashboard.</p>
+                    <p className="text-3xl font-semibold">Atharv.Joshi Task Manager</p>
+                    <p className="text-sm text-white/70">Your productivity dashboard.</p>
                   </div>
                 </div>
               </div>

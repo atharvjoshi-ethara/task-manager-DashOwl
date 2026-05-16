@@ -158,7 +158,7 @@ const Layout = () => {
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400/20 to-blue-500/20 border border-cyan-300/20">
               <FiCheckCircle className="text-primary" />
             </span>
-            DashOwl
+            Atharv.Joshi Task Manager
           </h1>
           <button className="md:hidden text-textMuted p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
             <FiX size={24} />
@@ -300,7 +300,7 @@ const Layout = () => {
               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
                 <div className="flex items-center gap-2">
                   <FiCheckCircle className="text-primary" />
-                  <span className="font-bold text-textMain">DashOwl</span>
+                  <span className="font-bold text-textMain">Atharv.Joshi Task Manager</span>
                 </div>
                 <span className="hidden md:inline text-textMain/20">|</span>
                 <span>&copy; {new Date().getFullYear()} All rights reserved.</span>

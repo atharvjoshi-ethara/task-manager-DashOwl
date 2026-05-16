@@ -42,8 +42,8 @@ const Signup = () => {
                     <FiCheckCircle className="text-2xl text-white" />
                   </div>
                   <div>
-                    <p className="text-3xl font-semibold">DashOwl</p>
-                    <p className="text-sm text-white/70">Your task dashboard.</p>
+                    <p className="text-3xl font-semibold">Atharv.Joshi Task Manager</p>
+                    <p className="text-sm text-white/70">Your productivity dashboard.</p>
                   </div>
                 </div>
               </div>
@@ -73,7 +73,7 @@ const Signup = () => {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-md mx-auto">
               <div className="mb-8">
                 <h1 className="text-3xl font-semibold text-textMain dark:text-textMain">Create your account</h1>
-                <p className="mt-3 text-sm text-textMuted dark:text-textMuted">Join DashOwl and start managing tasks with your team.</p>
+                <p className="mt-3 text-sm text-textMuted dark:text-textMuted">Join Atharv.Joshi Task Manager and start managing tasks with your team.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
