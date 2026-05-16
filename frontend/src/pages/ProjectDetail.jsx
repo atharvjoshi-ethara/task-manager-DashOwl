@@ -128,7 +128,7 @@ const ProjectDetail = () => {
             <>
               <button 
                 onClick={() => setShowMemberModal(true)}
-                className="flex items-center gap-2 bg-surface text-textMain px-4 py-2 rounded-lg hover:bg-surface/80 border border-textMain/10 transition-colors"
+                className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 border border-primary/20 transition-colors"
               >
                 <FiUserPlus /> Add Member
               </button>
@@ -143,7 +143,7 @@ const ProjectDetail = () => {
           )}
           <Link 
             to={`/projects/${id}/member/${user?._id}/progress`}
-            className="flex items-center gap-2 border border-secondary/30 text-secondary px-4 py-2 rounded-lg hover:bg-secondary/10 transition-colors"
+            className="flex items-center gap-2 bg-secondary/10 border border-secondary/30 text-secondary px-4 py-2 rounded-lg hover:bg-secondary/20 transition-colors"
           >
             My Progress
           </Link>
