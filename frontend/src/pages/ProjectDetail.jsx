@@ -206,9 +206,9 @@ const ProjectDetail = () => {
               return matchesStatus;
             });
             return (
-              <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm">
+              <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm text-black">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold flex items-center gap-2">
+                  <h3 className="font-semibold flex items-center gap-2 text-black">
                     <span className={`w-2 h-2 rounded-full ${
                       status === 'Todo' ? 'bg-textMuted' : 
                       status === 'In Progress' ? 'bg-primary' : 
@@ -216,7 +216,7 @@ const ProjectDetail = () => {
                     }`} />
                     {status}
                   </h3>
-                  <span className="text-xs bg-surface text-textMuted px-2 py-1 rounded-md">{colTasks.length}</span>
+                  <span className="text-xs bg-slate-900 text-white px-2 py-1 rounded-md">{colTasks.length}</span>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
