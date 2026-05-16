@@ -4,18 +4,21 @@ import { FiHome, FiFolder, FiLogOut, FiMenu, FiX, FiCheckCircle, FiSearch, FiBel
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { fetchNotifications } from '../store/notificationSlice';
+import { fetchProjects } from '../store/projectSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationPanel from './NotificationPanel';
 
 const Layout = () => {
   const { user, token } = useSelector((state) => state.auth);
   const { notifications } = useSelector((state) => state.notifications);
+  const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSearchFocused, setIsSearchFocused] = React.useState(false);
 
   React.useEffect(() => {
     const storedTheme = localStorage.getItem('theme');
@@ -59,6 +62,7 @@ const Layout = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
+    setIsSearchFocused(true);
 
     if (location.pathname === '/projects') {
       const query = value.trim();
@@ -69,7 +73,53 @@ const Layout = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const query = searchQuery.trim();
+    setIsSearchFocused(false);
     navigate(query ? `/projects?search=${encodeURIComponent(query)}` : '/projects');
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+    if (token && projects.length === 0) {
+      dispatch(fetchProjects());
+    }
+  };
+
+  const fuzzyMatch = (text, query) => {
+    if (!query) return false;
+    if (text.includes(query)) return true;
+
+    let queryIndex = 0;
+    for (const char of text) {
+      if (char === query[queryIndex]) queryIndex += 1;
+      if (queryIndex === query.length) return true;
+    }
+
+    const queryChars = new Set(query);
+    let matches = 0;
+    queryChars.forEach(char => {
+      if (text.includes(char)) matches += 1;
+    });
+
+    return matches >= Math.max(2, Math.ceil(queryChars.size * 0.6));
+  };
+
+  const matchingProjects = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    return projects
+      .filter(project => {
+        const name = project.name?.toLowerCase() || '';
+        const description = project.description?.toLowerCase() || '';
+        return fuzzyMatch(name, query) || fuzzyMatch(description, query);
+      })
+      .slice(0, 6);
+  }, [projects, searchQuery]);
+
+  const handleSuggestionSelect = (projectId) => {
+    setSearchQuery('');
+    setIsSearchFocused(false);
+    navigate(`/projects/${projectId}`);
   };
 
   const navLinks = [
@@ -159,19 +209,48 @@ const Layout = () => {
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-textMain p-2 hover:bg-textMain/5 rounded-lg">
               <FiMenu size={24} />
             </button>
-            <form
-              onSubmit={handleSearchSubmit}
-              className="hidden sm:flex items-center bg-background border border-textMain/10 rounded-full px-4 py-2 w-48 lg:w-64 focus-within:border-primary transition-all"
-            >
-              <FiSearch className="text-textMuted mr-2" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search projects..."
-                className="bg-transparent text-sm w-full outline-none text-textMain placeholder-textMuted"
-              />
-            </form>
+            <div className="relative hidden sm:block w-48 lg:w-64">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center bg-background border border-textMain/10 rounded-full px-4 py-2 focus-within:border-primary transition-all"
+              >
+                <FiSearch className="text-textMuted mr-2" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 180)}
+                  placeholder="Search projects..."
+                  className="bg-transparent text-sm w-full outline-none text-textMain placeholder-textMuted"
+                />
+              </form>
+              {isSearchFocused && searchQuery.trim() && (
+                <div className="absolute left-0 right-0 top-[calc(100%+8px)] overflow-hidden rounded-xl border border-textMain/10 bg-surface shadow-2xl z-[100]">
+                  {matchingProjects.length > 0 ? (
+                    matchingProjects.map(project => (
+                      <button
+                        key={project._id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSuggestionSelect(project._id)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-primary/10 transition-colors"
+                      >
+                        <FiFolder className="text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-textMain truncate">{project.name}</p>
+                          {project.description && (
+                            <p className="text-xs text-textMuted truncate">{project.description}</p>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-textMuted">No matching projects</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4 relative">
             <button 
