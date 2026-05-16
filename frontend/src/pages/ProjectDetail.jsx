@@ -143,7 +143,7 @@ const ProjectDetail = () => {
           )}
           <Link 
             to={`/projects/${id}/member/${user?._id}/progress`}
-            className="text-sm text-secondary hover:underline mr-2"
+            className="flex items-center gap-2 border border-secondary/30 text-secondary px-4 py-2 rounded-lg hover:bg-secondary/10 transition-colors"
           >
             My Progress
           </Link>
