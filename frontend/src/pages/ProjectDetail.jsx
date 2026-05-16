@@ -7,6 +7,165 @@ import { FiPlus, FiArrowLeft, FiClock, FiUserPlus, FiTrash2, FiMail } from 'reac
 import { format, parseISO, isPast } from 'date-fns';
 import TaskDrawer from '../components/TaskDrawer';
 
+const TaskBoard = React.memo(({ columns, tasksByStatus, userId, currentProject, handleStatusChange, handleAssignTask, setSelectedTaskId }) => (
+  <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+    <div className="flex gap-4 md:gap-6 min-w-max h-full">
+      {columns.map(status => {
+        const colTasks = tasksByStatus[status] || [];
+        return (
+          <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm text-black">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2 text-black">
+                <span className={`w-2 h-2 rounded-full ${
+                  status === 'Todo' ? 'bg-textMuted' : 
+                  status === 'In Progress' ? 'bg-primary' : 
+                  status === 'Review' ? 'bg-secondary' : 'bg-success'
+                }`} />
+                {status}
+              </h3>
+              <span className="text-xs bg-slate-900 text-white px-2 py-1 rounded-md">{colTasks.length}</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+              {colTasks.map(task => {
+                const overdue = task.status !== 'Done' && task.dueDate && isPast(parseISO(task.dueDate));
+                return (
+                  <div 
+                    key={task._id}
+                    onClick={() => setSelectedTaskId(task._id)}
+                    className={`glass p-4 rounded-xl cursor-pointer border-l-4 hover:bg-surface/80 transition-colors ${
+                      overdue ? 'border-l-danger bg-danger/5' : 'border-l-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                        task.priority === 'High' ? 'bg-danger/20 text-danger' :
+                        task.priority === 'Medium' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+                      }`}>{task.priority}</span>
+                      {(userId && (task.assignedTo?._id === userId || currentProject.createdBy?._id === userId)) || !userId ? (
+                        <select 
+                          value={task.status}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => handleStatusChange(task._id, e.target.value)}
+                          className="text-xs bg-transparent text-textMuted outline-none cursor-pointer hover:text-textMain font-medium"
+                        >
+                          {columns.map(c => <option key={c} value={c} className="bg-surface text-textMain">{c}</option>)}
+                        </select>
+                      ) : (
+                        <span className="text-[10px] bg-surface/50 text-textMuted px-2 py-0.5 rounded border border-textMain/5">
+                          {task.status} (Read Only)
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-sm mb-1">{task.title}</h4>
+                    <p className="text-xs text-textMuted line-clamp-2 mb-3">{task.description}</p>
+
+                    <div className="flex items-center justify-between mt-auto">
+                      {task.dueDate ? (
+                        <div className={`flex items-center gap-1 text-xs ${overdue ? 'text-danger font-medium' : 'text-textMuted'}`}>
+                          <FiClock /> {format(parseISO(task.dueDate), 'MMM dd')}
+                        </div>
+                      ) : <div />}
+                      {task.assignedTo && typeof task.assignedTo === 'object' && task.assignedTo.name ? (
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] text-white font-bold" title={`Assigned to ${task.assignedTo.name}`}>
+                          {task.assignedTo.name.charAt(0).toUpperCase()}
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleAssignTask(task._id); }}
+                          className="text-[10px] bg-secondary/10 text-secondary px-2 py-1 rounded hover:bg-secondary/20 transition-colors"
+                        >
+                          Assign Task
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+));
+TaskBoard.displayName = 'TaskBoard';
+
+const ProgressTable = React.memo(({ projectMembers, memberTasksMap, id }) => (
+  <div className="flex-1 space-y-6">
+    <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-separate border-spacing-y-3 min-w-[700px]">
+          <thead>
+            <tr className="bg-textMain/5 border-b border-textMain/10">
+              <th className="p-4 text-sm font-semibold text-textMuted">Member</th>
+              <th className="p-4 text-sm font-semibold text-textMuted">Progress</th>
+              <th className="p-4 text-sm font-semibold text-textMuted">Tasks</th>
+              <th className="p-4 text-sm font-semibold text-textMuted text-right">View Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projectMembers.length > 0 ? projectMembers.map(member => {
+              const memberTasks = memberTasksMap[member._id] || [];
+              const completed = memberTasks.filter(t => t.status === 'Done').length;
+              const total = memberTasks.length;
+              const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+              return (
+                <tr key={member._id} className="border-b border-textMain/10 hover:bg-textMain/5 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold">
+                        {member.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-textMain">{member.name}</p>
+                        <p className="text-xs text-textMuted">{member.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 w-64">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary" 
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-textMain">{percent}%</span>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex gap-4 text-xs">
+                      <span className="text-textMuted"><b className="text-textMain">{completed}</b> Done</span>
+                      <span className="text-textMuted"><b className="text-textMain">{total - completed}</b> Pending</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <Link 
+                      to={`/projects/${id}/member/${member._id}/progress`}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                    >
+                      Full Report <FiArrowLeft className="rotate-180" />
+                    </Link>
+                  </td>
+                </tr>
+              );
+            }) : (
+              <tr>
+                <td colSpan="4" className="p-12 text-center text-textMuted">
+                  No members have been added to this project yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+));
+ProgressTable.displayName = 'ProgressTable';
+
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -257,163 +416,24 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      {activeTab === 'board' ? (
-        <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-          <div className="flex gap-4 md:gap-6 min-w-max h-full">
-          {columns.map(status => {
-            const colTasks = tasksByStatus[status] || [];
-            return (
-              <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm text-black">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold flex items-center gap-2 text-black">
-                    <span className={`w-2 h-2 rounded-full ${
-                      status === 'Todo' ? 'bg-textMuted' : 
-                      status === 'In Progress' ? 'bg-primary' : 
-                      status === 'Review' ? 'bg-secondary' : 'bg-success'
-                    }`} />
-                    {status}
-                  </h3>
-                  <span className="text-xs bg-slate-900 text-white px-2 py-1 rounded-md">{colTasks.length}</span>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
-                  {colTasks.map(task => {
-                    const overdue = task.status !== 'Done' && task.dueDate && isPast(parseISO(task.dueDate));
-                    return (
-                      <div 
-                        key={task._id}
-                        onClick={() => setSelectedTaskId(task._id)}
-                        className={`glass p-4 rounded-xl cursor-pointer border-l-4 hover:bg-surface/80 transition-colors ${
-                          overdue ? 'border-l-danger bg-danger/5' : 'border-l-transparent'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                            task.priority === 'High' ? 'bg-danger/20 text-danger' :
-                            task.priority === 'Medium' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
-                          }`}>{task.priority}</span>
-                          
-                          {/* Only show status select if user is Admin, Creator, or Assignee */}
-                          {(user?.role === 'Admin' || task.assignedTo?._id === user?._id || currentProject.createdBy?._id === user?._id) ? (
-                            <select 
-                              value={task.status}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => handleStatusChange(task._id, e.target.value)}
-                              className="text-xs bg-transparent text-textMuted outline-none cursor-pointer hover:text-textMain font-medium"
-                            >
-                              {columns.map(c => <option key={c} value={c} className="bg-surface text-textMain">{c}</option>)}
-                            </select>
-                          ) : (
-                            <span className="text-[10px] bg-surface/50 text-textMuted px-2 py-0.5 rounded border border-textMain/5">
-                              {task.status} (Read Only)
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-semibold text-sm mb-1">{task.title}</h4>
-                        <p className="text-xs text-textMuted line-clamp-2 mb-3">{task.description}</p>
-                        
-                        <div className="flex items-center justify-between mt-auto">
-                          {task.dueDate ? (
-                            <div className={`flex items-center gap-1 text-xs ${overdue ? 'text-danger font-medium' : 'text-textMuted'}`}>
-                              <FiClock /> {format(parseISO(task.dueDate), 'MMM dd')}
-                            </div>
-                          ) : <div />}
-                          
-                          {task.assignedTo && typeof task.assignedTo === 'object' && task.assignedTo.name ? (
-                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] text-white font-bold" title={`Assigned to ${task.assignedTo.name}`}>
-                              {task.assignedTo.name.charAt(0).toUpperCase()}
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleAssignTask(task._id); }}
-                              className="text-[10px] bg-secondary/10 text-secondary px-2 py-1 rounded hover:bg-secondary/20 transition-colors"
-                            >
-                              Assign Task
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+<div className={activeTab === 'board' ? '' : 'hidden'}>
+        <TaskBoard
+          columns={columns}
+          tasksByStatus={tasksByStatus}
+          userId={user?._id}
+          currentProject={currentProject}
+          handleStatusChange={handleStatusChange}
+          handleAssignTask={handleAssignTask}
+          setSelectedTaskId={setSelectedTaskId}
+        />
       </div>
-      ) : (
-        <div className="flex-1 space-y-6">
-          <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-separate border-spacing-y-3 min-w-[700px]">
-              <thead>
-                <tr className="bg-textMain/5 border-b border-textMain/10">
-                  <th className="p-4 text-sm font-semibold text-textMuted">Member</th>
-                  <th className="p-4 text-sm font-semibold text-textMuted">Progress</th>
-                  <th className="p-4 text-sm font-semibold text-textMuted">Tasks</th>
-                  <th className="p-4 text-sm font-semibold text-textMuted text-right">View Detail</th>
-                </tr>
-              </thead>
-              <tbody>
-                {projectMembers.length > 0 ? projectMembers.map(member => {
-                  const memberTasks = memberTasksMap[member._id] || [];
-                  const completed = memberTasks.filter(t => t.status === 'Done').length;
-                  const total = memberTasks.length;
-                  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  
-                  return (
-                    <tr key={member._id} className="border-b border-textMain/10 hover:bg-textMain/5 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold">
-                            {member.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-textMain">{member.name}</p>
-                            <p className="text-xs text-textMuted">{member.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 w-64">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary" 
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-textMain">{percent}%</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-4 text-xs">
-                          <span className="text-textMuted"><b className="text-textMain">{completed}</b> Done</span>
-                          <span className="text-textMuted"><b className="text-textMain">{total - completed}</b> Pending</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        <Link 
-                          to={`/projects/${id}/member/${member._id}/progress`}
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                        >
-                          Full Report <FiArrowLeft className="rotate-180" />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                }) : (
-                  <tr>
-                    <td colSpan="4" className="p-12 text-center text-textMuted">
-                      No members have been added to this project yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className={activeTab === 'progress' ? '' : 'hidden'}>
+        <ProgressTable
+          projectMembers={projectMembers}
+          memberTasksMap={memberTasksMap}
+          id={id}
+        />
+      </div>
 
       {/* Task Modal */}
       {showModal && (
