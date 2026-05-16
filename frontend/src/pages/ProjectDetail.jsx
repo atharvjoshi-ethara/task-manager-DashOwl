@@ -3,7 +3,7 @@ import { fetchProjectDetails, createTask, updateTaskStatus, addMemberToProject, 
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { FiPlus, FiArrowLeft, FiClock, FiCheckCircle, FiMoreVertical, FiUserPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiArrowLeft, FiClock, FiUserPlus, FiTrash2, FiMail } from 'react-icons/fi';
 import { format, parseISO, isPast } from 'date-fns';
 import TaskDrawer from '../components/TaskDrawer';
 
@@ -16,6 +16,7 @@ const ProjectDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showMembersList, setShowMembersList] = useState(false);
   const [taskToAssign, setTaskToAssign] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [activeTab, setActiveTab] = useState('board'); // 'board' or 'progress'
@@ -82,6 +83,12 @@ const ProjectDetail = () => {
   if (isLoading || !currentProject) return <div className="p-8 text-textMuted">Loading project details...</div>;
 
   const columns = ['Todo', 'In Progress', 'Review', 'Done'];
+  const projectMembers = [
+    ...(currentProject.members || []),
+    ...(currentProject.createdBy?._id && !(currentProject.members || []).some(member => member._id === currentProject.createdBy._id)
+      ? [currentProject.createdBy]
+      : [])
+  ];
 
   return (
     <div className="space-y-6 flex flex-col min-h-full">
@@ -98,37 +105,68 @@ const ProjectDetail = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
             <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Team Members</p>
-              <p className="text-xl font-semibold text-textMain">{currentProject.members?.length || 0}</p>
+              <p className="text-xl font-semibold text-textMain">{projectMembers.length}</p>
             </div>
             <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Tasks</p>
               <p className="text-xl font-semibold text-textMain">{tasks.length}</p>
             </div>
-            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Members</p>
-              <div className="flex flex-wrap items-center gap-2">
-                {currentProject.members?.map(member => (
-                  <Link
-                    key={member._id}
-                    to={`/projects/${id}/member/${member._id}/progress`}
-                    title={`${member.name}'s Progress`}
-                    className="relative z-0 hover:z-10"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                      {member.name.charAt(0).toUpperCase()}
+            <div className="relative rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+              <button
+                type="button"
+                onClick={() => setShowMembersList(prev => !prev)}
+                className="w-full text-left"
+              >
+                <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Members</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {projectMembers.length > 0 ? projectMembers.slice(0, 5).map(member => (
+                    <div
+                      key={member._id}
+                      title={member.name}
+                      className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-surface"
+                    >
+                      {member.name?.charAt(0).toUpperCase()}
                     </div>
-                  </Link>
-                ))}
+                  )) : (
+                    <span className="text-sm text-textMuted">No members</span>
+                  )}
+                  {projectMembers.length > 5 && (
+                    <span className="text-xs font-semibold text-textMuted">+{projectMembers.length - 5}</span>
+                  )}
+                </div>
+              </button>
+
+              {showMembersList && (
+                <div className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl border border-textMain/10 bg-surface shadow-2xl">
+                  {projectMembers.map(member => (
+                    <Link
+                      key={member._id}
+                      to={`/projects/${id}/member/${member._id}/progress`}
+                      onClick={() => setShowMembersList(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-primary/10 transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shrink-0">
+                        {member.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-textMain truncate">{member.name}</p>
+                        <p className="text-xs text-textMuted truncate flex items-center gap-1">
+                          <FiMail size={12} /> {member.email || 'No email'}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
               </div>
             </div>
           </div>
-        </div>
         <div className="flex flex-wrap items-center gap-3 justify-end">
           {user?.role === 'Admin' && (
             <>
               <button 
                 onClick={() => setShowMemberModal(true)}
-                className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 border border-primary/20 transition-colors"
+                className="flex items-center gap-2 bg-surface/70 text-textMain px-4 py-2 rounded-lg hover:bg-surface border border-textMain/15 transition-colors"
               >
                 <FiUserPlus /> Add Member
               </button>
@@ -143,7 +181,7 @@ const ProjectDetail = () => {
           )}
           <Link 
             to={`/projects/${id}/member/${user?._id}/progress`}
-            className="flex items-center gap-2 bg-secondary/10 border border-secondary/30 text-secondary px-4 py-2 rounded-lg hover:bg-secondary/20 transition-colors"
+            className="flex items-center gap-2 bg-surface/70 border border-primary/25 text-textMain px-4 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
           >
             My Progress
           </Link>
@@ -299,7 +337,7 @@ const ProjectDetail = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentProject.members?.length > 0 ? currentProject.members.map(member => {
+                {projectMembers.length > 0 ? projectMembers.map(member => {
                   const memberTasks = tasks.filter(t => t.assignedTo?._id === member._id);
                   const completed = memberTasks.filter(t => t.status === 'Done').length;
                   const total = memberTasks.length;
@@ -386,7 +424,7 @@ const ProjectDetail = () => {
                   <label className="block text-sm text-textMuted mb-1">Assignee</label>
                   <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary">
                     <option value="">Unassigned</option>
-                    {currentProject.members.map(member => (
+                    {projectMembers.map(member => (
                       <option key={member._id} value={member._id}>{member.name}</option>
                     ))}
                   </select>
@@ -432,9 +470,9 @@ const ProjectDetail = () => {
             <p className="text-sm text-textMuted mb-6">Select a team member to assign this task to:</p>
             
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {currentProject.members?.length > 0 ? (
+              {projectMembers.length > 0 ? (
                 <>
-                  {currentProject.members.map(member => (
+                  {projectMembers.map(member => (
                     <button 
                       key={member._id}
                       onClick={() => submitAssignment(member._id)}

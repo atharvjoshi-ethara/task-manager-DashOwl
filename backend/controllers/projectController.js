@@ -28,9 +28,9 @@ exports.getProjects = async (req, res) => {
   try {
     let projects;
     if (req.user.role === 'Admin') {
-      projects = await Project.find().populate('members', 'name email').populate('createdBy', 'name');
+      projects = await Project.find().populate('members', 'name email avatar role').populate('createdBy', 'name email avatar role');
     } else {
-      projects = await Project.find({ members: req.user._id }).populate('members', 'name email').populate('createdBy', 'name');
+      projects = await Project.find({ members: req.user._id }).populate('members', 'name email avatar role').populate('createdBy', 'name email avatar role');
     }
     res.json(projects);
   } catch (error) {
@@ -40,7 +40,7 @@ exports.getProjects = async (req, res) => {
 
 exports.getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id).populate('members', 'name email').populate('createdBy', 'name');
+    const project = await Project.findById(req.params.id).populate('members', 'name email avatar role').populate('createdBy', 'name email avatar role');
     if (!project) return res.status(404).json({ message: 'Project not found' });
     
     // Check if member is part of project or admin
@@ -151,7 +151,7 @@ exports.addMember = async (req, res) => {
     project.members.push(user._id);
     await project.save();
     
-    res.json(await Project.findById(req.params.id).populate('members', 'name email').populate('createdBy', 'name'));
+    res.json(await Project.findById(req.params.id).populate('members', 'name email avatar role').populate('createdBy', 'name email avatar role'));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
