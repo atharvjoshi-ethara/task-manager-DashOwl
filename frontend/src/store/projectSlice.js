@@ -1,31 +1,53 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { logout } from './authSlice';
 
 const API_URL = '/api';
 
+const getAuthToken = (state) => {
+  const token = state.auth.token;
+  return token && token !== 'null' && token !== 'undefined' ? token : null;
+};
+
+const rejectProtectedRequest = (error, thunkAPI, fallbackMessage) => {
+  const message = error.response?.data?.message || fallbackMessage;
+  if (error.response?.status === 401) {
+    thunkAPI.dispatch(logout());
+  }
+  return thunkAPI.rejectWithValue(message);
+};
+
 export const fetchProjects = createAsyncThunk('project/fetchProjects', async (_, thunkAPI) => {
   try {
-    const token = thunkAPI.getState().auth.token;
+    const token = getAuthToken(thunkAPI.getState());
+    if (!token) {
+      return thunkAPI.rejectWithValue('Not authenticated');
+    }
+
     const res = await axios.get(`${API_URL}/projects`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return res.data;
   } catch (error) {
     toast.error('Failed to fetch projects');
-    return thunkAPI.rejectWithValue(error.response?.data?.message);
+    return rejectProtectedRequest(error, thunkAPI, 'Failed to fetch projects');
   }
 });
 
 export const fetchDashboardStats = createAsyncThunk('project/fetchStats', async (_, thunkAPI) => {
   try {
-    const token = thunkAPI.getState().auth.token;
+    const token = getAuthToken(thunkAPI.getState());
+    if (!token) {
+      return thunkAPI.rejectWithValue('Not authenticated');
+    }
+
     const res = await axios.get(`${API_URL}/dashboard/stats`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return res.data;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response?.data?.message);
+    return rejectProtectedRequest(error, thunkAPI, 'Failed to fetch dashboard stats');
   }
 });
 

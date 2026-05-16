@@ -8,15 +8,19 @@ export const fetchNotifications = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const { auth } = getState();
+      if (!auth.token) {
+        return rejectWithValue('Not authenticated');
+      }
+
       const config = {
         headers: {
-          Authorization: `Bearer ${auth.user.token}`,
+          Authorization: `Bearer ${auth.token}`,
         },
       };
       const response = await axios.get(API_URL, config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch notifications');
     }
   }
 );
@@ -26,15 +30,19 @@ export const markAsRead = createAsyncThunk(
   async (id, { getState, rejectWithValue }) => {
     try {
       const { auth } = getState();
+      if (!auth.token) {
+        return rejectWithValue('Not authenticated');
+      }
+
       const config = {
         headers: {
-          Authorization: `Bearer ${auth.user.token}`,
+          Authorization: `Bearer ${auth.token}`,
         },
       };
       const response = await axios.put(`${API_URL}/${id}/read`, {}, config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark notification as read');
     }
   }
 );
@@ -44,15 +52,19 @@ export const markAllRead = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const { auth } = getState();
+      if (!auth.token) {
+        return rejectWithValue('Not authenticated');
+      }
+
       const config = {
         headers: {
-          Authorization: `Bearer ${auth.user.token}`,
+          Authorization: `Bearer ${auth.token}`,
         },
       };
       await axios.put(`${API_URL}/mark-all-read`, {}, config);
       return true;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark notifications as read');
     }
   }
 );

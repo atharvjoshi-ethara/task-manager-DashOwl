@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NotificationPanel from './NotificationPanel';
 
 const Layout = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, token } = useSelector((state) => state.auth);
   const { notifications } = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Layout = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   React.useEffect(() => {
-    if (user) {
+    if (user && token) {
       dispatch(fetchNotifications());
       
       // Add polling to check for new notifications every 30 seconds
@@ -37,7 +37,7 @@ const Layout = () => {
       
       return () => clearInterval(interval);
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, token]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -172,7 +172,7 @@ const Layout = () => {
               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
                 <div className="flex items-center gap-2">
                   <FiCheckCircle className="text-primary" />
-                  <span className="font-bold text-textMain">TaskFlow</span>
+                  <span className="font-bold text-textMain">DashOwl</span>
                 </div>
                 <span className="hidden md:inline text-textMain/20">|</span>
                 <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
