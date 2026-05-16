@@ -138,7 +138,7 @@ const Team = () => {
 
       {/* Invite Modal */}
       {showInvite && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass w-full max-w-md p-6 rounded-2xl shadow-2xl">
             <h2 className="text-xl font-bold mb-4 text-textMain">Invite New Member</h2>
             <form onSubmit={(e) => {
