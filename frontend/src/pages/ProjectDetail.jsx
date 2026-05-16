@@ -166,7 +166,7 @@ const ProjectDetail = () => {
               onClick={() => setActiveTab('board')}
               className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'board' ? 'bg-primary text-black' : 'text-textMuted hover:text-textMain'}`}
             >
-              Kanban Board
+              Task Board
             </button>
             <button 
               onClick={() => setActiveTab('progress')}
