@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../utils/api';
 
-const API_URL = '/api/notifications';
+const API_URL = '/notifications';
 
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchAll',
@@ -12,12 +12,7 @@ export const fetchNotifications = createAsyncThunk(
         return rejectWithValue('Not authenticated');
       }
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      };
-      const response = await axios.get(API_URL, config);
+      const response = await api.get(API_URL);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch notifications');
@@ -34,12 +29,7 @@ export const markAsRead = createAsyncThunk(
         return rejectWithValue('Not authenticated');
       }
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      };
-      const response = await axios.put(`${API_URL}/${id}/read`, {}, config);
+      const response = await api.put(`${API_URL}/${id}/read`, {});
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark notification as read');
@@ -56,12 +46,7 @@ export const markAllRead = createAsyncThunk(
         return rejectWithValue('Not authenticated');
       }
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      };
-      await axios.put(`${API_URL}/mark-all-read`, {}, config);
+      await api.put(`${API_URL}/mark-all-read`, {});
       return true;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark notifications as read');

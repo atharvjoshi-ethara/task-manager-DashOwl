@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { useSelector } from 'react-redux';
 import { 
-  FiCheckCircle as CheckCircle2, FiClock as Clock, FiAlertCircle as AlertCircle, FiCalendar as Calendar, 
-  FiFilter as Filter, FiMoreVertical as MoreVertical, FiTarget as Target, FiList as ListTodo
+  FiCheckCircle as CheckCircle2, FiClock as Clock, FiAlertCircle as AlertCircle,
+  FiMoreVertical as MoreVertical, FiTarget as Target, FiList as ListTodo
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { format, isPast, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { cn } from '../utils/cn';
 import TaskDrawer from './TaskDrawer';
 
 const COLORS = {
   Todo: '#94a3b8',
   'In Progress': '#3b82f6',
-  Review: '#a855f7',
+  Review: '#2563eb',
   Done: '#22c55e'
 };
 
@@ -34,13 +33,7 @@ const MemberProgressTracker = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const baseUrl = import.meta.env.PROD 
-          ? '/api' 
-          : 'http://localhost:5000/api';
-          
-        const res = await axios.get(`${baseUrl}/projects/${projectId}/member/${memberId}/progress`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/projects/${projectId}/member/${memberId}/progress`);
         
         setData({
           member: res.data.member || { name: 'Member', role: 'Project Member' },
@@ -64,7 +57,7 @@ const MemberProgressTracker = () => {
     if (token && projectId && memberId) fetchProgress();
   }, [projectId, memberId, token]);
 
-  if (loading) return <div className="p-20 text-center text-primary text-2xl font-bold">Loading Progress...</div>;
+  if (loading) return <div className="skeleton h-64 rounded-2xl" />;
   if (!data) return <div className="p-20 text-center text-danger text-2xl font-bold">Failed to load member data.</div>;
 
   const { member, stats, tasks } = data;
@@ -83,7 +76,7 @@ const MemberProgressTracker = () => {
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return 'No due date';
       return format(date, 'MMM dd, yyyy');
-    } catch (e) {
+    } catch {
       return 'No due date';
     }
   };
@@ -95,20 +88,20 @@ const MemberProgressTracker = () => {
       className="p-6 max-w-7xl mx-auto space-y-6"
     >
       {/* Header Profile Section */}
-      <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between shadow-xl gap-6 border border-textMain/10">
+      <div className="panel rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center space-x-4 w-full sm:w-auto">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold border-2 border-primary shrink-0">
             {(member?.name || 'M').charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold textMain truncate">{member?.name || 'Member'}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-textMain truncate">{member?.name || 'Member'}</h1>
             <p className="text-textMuted truncate">{member?.role || 'Team Member'}</p>
           </div>
         </div>
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-end">
           <p className="text-xs md:text-sm text-textMuted mb-2 uppercase tracking-wider font-semibold">Overall Completion</p>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
-            <div className="flex-1 sm:w-48 h-3 bg-surface rounded-full overflow-hidden border border-textMain/5">
+            <div className="flex-1 sm:w-48 h-3 bg-white/[0.05] rounded-full overflow-hidden border border-white/10">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${stats?.progressPercentage || 0}%` }}
@@ -128,13 +121,13 @@ const MemberProgressTracker = () => {
           { title: 'Pending', value: stats?.pendingTasks, icon: Clock, color: 'text-warning' },
           { title: 'Overdue', value: stats?.overdueTasks, icon: AlertCircle, color: 'text-danger' },
         ].map((stat, i) => (
-          <div key={i} className="glass rounded-xl p-5 flex items-center space-x-4 border border-textMain/10">
-            <div className={cn("p-3 rounded-lg bg-surface/50 shrink-0", stat.color)}>
+          <div key={i} className="interactive-card glass rounded-xl p-5 flex items-center space-x-4">
+            <div className={cn("p-3 rounded-lg bg-white/[0.05] shrink-0", stat.color)}>
               <stat.icon size={24} />
             </div>
             <div className="min-w-0">
               <p className="text-sm text-textMuted truncate">{stat.title}</p>
-              <p className="text-2xl font-bold textMain">{stat.value || 0}</p>
+              <p className="text-2xl font-bold text-textMain">{stat.value || 0}</p>
             </div>
           </div>
         ))}
@@ -142,7 +135,7 @@ const MemberProgressTracker = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="glass rounded-2xl p-6 border border-textMain/10 shadow-xl">
+          <div className="panel rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Target className="text-primary" /> Assigned Tasks
@@ -150,7 +143,7 @@ const MemberProgressTracker = () => {
               <select 
                 value={filterStatus} 
                 onChange={e => setFilterStatus(e.target.value)}
-                className="bg-surface border border-textMain/10 rounded-lg p-2 text-sm text-textMain outline-none"
+                className="field p-2 text-sm"
               >
                 {['All', 'Todo', 'In Progress', 'Review', 'Done'].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -158,9 +151,9 @@ const MemberProgressTracker = () => {
             
             <div className="space-y-3">
               {filteredTasks.length > 0 ? filteredTasks.map((task, idx) => (
-                <div key={task._id || idx} className="p-4 bg-surface/40 rounded-xl border border-textMain/10 flex justify-between items-center hover:bg-surface/60 transition-all">
+                <div key={task._id || idx} className="p-4 bg-white/[0.04] rounded-xl border border-white/10 flex justify-between items-center hover:bg-white/[0.07] transition-all">
                   <div className="flex-1">
-                    <h3 className="font-semibold textMain">{task.title || 'Untitled Task'}</h3>
+                    <h3 className="font-semibold text-textMain">{task.title || 'Untitled Task'}</h3>
                     <div className="flex items-center gap-3 mt-1">
                       <span className={cn("w-2 h-2 rounded-full", 
                         task.status === 'Done' ? 'bg-success' : 
@@ -198,7 +191,7 @@ const MemberProgressTracker = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="glass rounded-2xl p-6 border border-textMain/10 shadow-xl">
+          <div className="panel rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Breakdown</h2>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
@@ -214,7 +207,7 @@ const MemberProgressTracker = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: '#1e293b', border: 'none', color: '#fff' }} />
+                  <Tooltip contentStyle={{ background: 'rgba(2, 6, 23, 0.94)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: '#fff' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -225,7 +218,7 @@ const MemberProgressTracker = () => {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[item.name] }} />
                     <span className="text-textMuted">{item.name}</span>
                   </div>
-                  <span className="font-bold textMain">{item.value}</span>
+                  <span className="font-bold text-textMain">{item.value}</span>
                 </div>
               ))}
             </div>

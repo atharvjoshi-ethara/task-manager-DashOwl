@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProjects, createProject, deleteProject } from '../store/projectSlice';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -46,16 +46,16 @@ const Projects = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <div className="panel rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold textMain">Projects</h1>
+          <h1 className="text-2xl font-semibold text-textMain">Projects</h1>
           <p className="text-sm text-textMuted">Manage your team projects and workspaces.</p>
         </div>
         {user?.role === 'Admin' && (
           <button 
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
           >
             <FiPlus /> New Project
           </button>
@@ -63,9 +63,11 @@ const Projects = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-textMuted">Loading projects...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map(item => <div key={item} className="skeleton h-48 rounded-2xl" />)}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProjects.map((p, i) => (
             <motion.div 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -73,9 +75,9 @@ const Projects = () => {
               className="relative group"
             >
               <Link to={`/projects/${p._id}`}>
-                <div className="glass p-6 rounded-2xl h-full border border-textMain/10 hover:border-primary/50 transition-colors flex flex-col">
+                <div className="interactive-card glass p-5 rounded-2xl h-full flex flex-col">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-surface/50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-400/15 to-blue-600/15 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <FiFolder className="text-2xl text-primary" />
                     </div>
                     {user?.role === 'Admin' && (
@@ -88,11 +90,12 @@ const Projects = () => {
                       </button>
                     )}
                   </div>
-                  <h3 className="font-bold text-lg mb-2 textMain">{p.name}</h3>
-                  <p className="text-sm text-textMuted flex-1">{p.description}</p>
+                  <h3 className="font-semibold text-lg mb-2 text-textMain group-hover:text-cyan-200 transition-colors">{p.name}</h3>
+                  <p className="text-sm text-textMuted flex-1 line-clamp-3">{p.description || 'No description'}</p>
                   
-                  <div className="mt-6 pt-4 border-t border-textMain/10 flex items-center justify-between text-sm text-textMuted">
+                  <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-sm text-textMuted">
                     <span className="flex items-center gap-1"><FiUsers /> {p.members?.length || 0} Members</span>
+                    <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
                   </div>
                 </div>
               </Link>
@@ -100,7 +103,7 @@ const Projects = () => {
           ))}
           
           {filteredProjects.length === 0 && (
-            <div className="col-span-full py-12 text-center glass rounded-2xl border-dashed">
+            <div className="col-span-full py-12 text-center glass rounded-2xl border border-dashed border-white/10">
               <FiFolder className="text-4xl text-textMuted mx-auto mb-3" />
               <p className="text-textMuted">
                 {searchQuery ? 'No projects match your search.' : 'No projects found.'}
@@ -118,15 +121,15 @@ const Projects = () => {
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm text-textMuted mb-1">Project Name</label>
-                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="field" />
               </div>
               <div>
                 <label className="block text-sm text-textMuted mb-1">Description</label>
-                <textarea rows="3" value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary"></textarea>
+                <textarea rows="3" value={description} onChange={e => setDescription(e.target.value)} className="field"></textarea>
               </div>
               <div className="flex gap-3 justify-end mt-6">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg text-textMuted hover:bg-surface">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">Create Project</button>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-muted px-4 py-2 rounded-lg">Cancel</button>
+                <button type="submit" className="btn-primary px-4 py-2 rounded-lg">Create Project</button>
               </div>
             </form>
           </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfile, deleteAccount, upgradeAccount } from '../store/authSlice';
 import { motion } from 'framer-motion';
@@ -16,19 +16,14 @@ const Settings = () => {
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [adminCode, setAdminCode] = useState('');
   
-  const [theme, setTheme] = useState('light');
-
   useEffect(() => {
-    const storedTheme = localStorage.getItem('theme');
-    const initialTheme = storedTheme || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
-    setTheme(initialTheme);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
   }, []);
 
-  const toggleTheme = (newTheme) => {
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    localStorage.setItem('theme', newTheme);
-    setTheme(newTheme);
+  const toggleTheme = () => {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
   };
 
   const handleUpdate = (e) => {
@@ -57,7 +52,7 @@ const Settings = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 md:p-6 max-w-4xl mx-auto space-y-6 bg-surface/70 rounded-3xl border border-textMain/10 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="panel p-2 md:p-6 max-w-4xl mx-auto space-y-6 rounded-2xl">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-textMain">Settings</h1>
         <p className="text-sm text-textMuted">Manage your profile, preferences, and account settings in one place.</p>
@@ -79,18 +74,18 @@ const Settings = () => {
               )}
               <div className="flex-1">
                 <label className="block text-sm text-textMuted mb-1">Avatar URL</label>
-                <input type="text" value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="https://..." className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input type="text" value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="https://..." className="field" />
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-textMuted mb-1">Full Name</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input type="text" value={name} onChange={e => setName(e.target.value)} required className="field" />
               </div>
               <div>
                 <label className="block text-sm text-textMuted mb-1">Email Address</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="field" />
               </div>
             </div>
 
@@ -100,12 +95,12 @@ const Settings = () => {
               </h3>
               <div>
                 <label className="block text-sm text-textMuted mb-1">New Password (leave blank to keep current)</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="field" />
               </div>
             </div>
 
             <div className="flex justify-end pt-4">
-              <button type="submit" disabled={isLoading} className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
+              <button type="submit" disabled={isLoading} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50">
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
@@ -126,9 +121,9 @@ const Settings = () => {
                   value={adminCode} 
                   onChange={e => setAdminCode(e.target.value)} 
                   placeholder="Secret Key" 
-                  className="w-full bg-surface border border-textMain/10 rounded-lg p-2 text-sm text-textMain focus:outline-none focus:border-primary"
+                  className="field text-sm"
                 />
-                <button type="submit" className="w-full bg-primary text-white py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                <button type="submit" className="btn-primary w-full py-2 rounded-lg text-sm font-medium">
                   Verify Key
                 </button>
               </form>
@@ -162,13 +157,13 @@ const Settings = () => {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => toggleTheme('dark')}
-                className={`flex-1 py-3 border rounded-lg flex items-center justify-center gap-2 transition-colors ${theme === 'dark' ? 'bg-surface border-primary text-primary' : 'bg-surface/50 border-textMain/10 text-textMuted hover:text-textMain'}`}
+                className="flex-1 py-3 border rounded-lg flex items-center justify-center gap-2 transition-colors bg-cyan-400/10 border-cyan-300/30 text-cyan-200"
               >
                 <FiMoon /> Dark
               </button>
               <button 
-                onClick={() => toggleTheme('light')}
-                className={`flex-1 py-3 border rounded-lg flex items-center justify-center gap-2 transition-colors ${theme === 'light' ? 'bg-surface border-primary text-primary' : 'bg-surface/50 border-textMain/10 text-textMuted hover:text-textMain'}`}
+                onClick={() => toggleTheme('dark')}
+                className="flex-1 py-3 border rounded-lg flex items-center justify-center gap-2 transition-colors bg-white/[0.04] border-white/10 text-textMuted cursor-not-allowed opacity-60"
               >
                 <FiSun /> Light
               </button>

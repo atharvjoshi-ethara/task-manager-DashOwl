@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
-
-const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
 const useAuthStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user')) || null,
@@ -12,7 +10,7 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const res = await api.post('/auth/login', { email, password });
       const { token, ...userData } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -29,7 +27,7 @@ const useAuthStore = create((set) => ({
   signup: async (name, email, password, role) => {
     set({ isLoading: true });
     try {
-      const res = await axios.post(`${API_URL}/auth/signup`, { name, email, password, role });
+      const res = await api.post('/auth/signup', { name, email, password, role });
       const { token, ...userData } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));

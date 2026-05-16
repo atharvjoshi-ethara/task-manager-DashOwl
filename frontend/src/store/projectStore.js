@@ -1,49 +1,39 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
-
-const useProjectStore = create((set, get) => ({
+const useProjectStore = create((set) => ({
   projects: [],
   currentProject: null,
   tasks: [],
   isLoading: false,
 
-  fetchProjects: async (token) => {
+  fetchProjects: async () => {
     set({ isLoading: true });
     try {
-      const res = await axios.get(`${API_URL}/projects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/projects');
       set({ projects: res.data, isLoading: false });
-    } catch (error) {
+    } catch {
       set({ isLoading: false });
       toast.error('Failed to fetch projects');
     }
   },
 
-  fetchProjectDetails: async (projectId, token) => {
+  fetchProjectDetails: async (projectId) => {
     set({ isLoading: true });
     try {
-      const res = await axios.get(`${API_URL}/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const tasksRes = await axios.get(`${API_URL}/tasks/project/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/projects/${projectId}`);
+      const tasksRes = await api.get(`/tasks/project/${projectId}`);
       set({ currentProject: res.data, tasks: tasksRes.data, isLoading: false });
-    } catch (error) {
+    } catch {
       set({ isLoading: false });
       toast.error('Failed to fetch project details');
     }
   },
 
-  createProject: async (projectData, token) => {
+  createProject: async (projectData) => {
     try {
-      const res = await axios.post(`${API_URL}/projects`, projectData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post('/projects', projectData);
       set((state) => ({ projects: [...state.projects, res.data] }));
       toast.success('Project created');
       return true;
@@ -53,11 +43,9 @@ const useProjectStore = create((set, get) => ({
     }
   },
 
-  createTask: async (taskData, token) => {
+  createTask: async (taskData) => {
     try {
-      const res = await axios.post(`${API_URL}/tasks`, taskData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post('/tasks', taskData);
       set((state) => ({ tasks: [...state.tasks, res.data] }));
       toast.success('Task created');
       return true;
@@ -67,15 +55,13 @@ const useProjectStore = create((set, get) => ({
     }
   },
 
-  updateTaskStatus: async (taskId, status, token) => {
+  updateTaskStatus: async (taskId, status) => {
     try {
-      const res = await axios.put(`${API_URL}/tasks/${taskId}`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.put(`/tasks/${taskId}`, { status });
       set((state) => ({
         tasks: state.tasks.map(t => t._id === taskId ? res.data : t)
       }));
-    } catch (error) {
+    } catch {
       toast.error('Failed to update task');
     }
   }

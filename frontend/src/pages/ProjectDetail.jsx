@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchProjectDetails, createTask, updateTaskStatus, addMemberToProject, deleteProject } from '../store/projectSlice';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -7,23 +7,26 @@ import { FiPlus, FiArrowLeft, FiClock, FiUserPlus, FiTrash2, FiMail } from 'reac
 import { format, parseISO, isPast } from 'date-fns';
 import TaskDrawer from '../components/TaskDrawer';
 
+const statusStyles = {
+  Todo: 'bg-slate-400',
+  'In Progress': 'bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.65)]',
+  Review: 'bg-blue-400 shadow-[0_0_16px_rgba(96,165,250,0.55)]',
+  Done: 'bg-emerald-400 shadow-[0_0_16px_rgba(74,222,128,0.55)]',
+};
+
 const TaskBoard = React.memo(({ columns, tasksByStatus, userId, currentProject, handleStatusChange, handleAssignTask, setSelectedTaskId }) => (
   <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-    <div className="flex gap-4 md:gap-6 min-w-max h-full">
+    <div className="flex gap-4 min-w-max h-full">
       {columns.map(status => {
         const colTasks = tasksByStatus[status] || [];
         return (
-          <div key={status} className="w-[280px] sm:w-80 flex flex-col bg-white/80 rounded-[28px] border border-textMain/10 p-4 shadow-sm text-black">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold flex items-center gap-2 text-black">
-                <span className={`w-2 h-2 rounded-full ${
-                  status === 'Todo' ? 'bg-textMuted' : 
-                  status === 'In Progress' ? 'bg-primary' : 
-                  status === 'Review' ? 'bg-secondary' : 'bg-success'
-                }`} />
+          <div key={status} className="w-[280px] sm:w-80 flex flex-col rounded-2xl border border-white/10 bg-slate-950/35 p-3 shadow-sm backdrop-blur-xl">
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+              <h3 className="font-semibold flex items-center gap-2 text-textMain text-sm">
+                <span className={`w-2.5 h-2.5 rounded-full ${statusStyles[status] || 'bg-textMuted'}`} />
                 {status}
               </h3>
-              <span className="text-xs bg-slate-900 text-white px-2 py-1 rounded-md">{colTasks.length}</span>
+              <span className="text-xs bg-white/[0.07] text-textMain px-2 py-1 rounded-md border border-white/10">{colTasks.length}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
@@ -33,14 +36,14 @@ const TaskBoard = React.memo(({ columns, tasksByStatus, userId, currentProject, 
                   <div 
                     key={task._id}
                     onClick={() => setSelectedTaskId(task._id)}
-                    className={`glass p-4 rounded-xl cursor-pointer border-l-4 hover:bg-surface/80 transition-colors ${
-                      overdue ? 'border-l-danger bg-danger/5' : 'border-l-transparent'
+                    className={`group rounded-xl cursor-pointer border border-white/10 bg-surface/60 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-300/35 hover:bg-surface/80 ${
+                      overdue ? 'border-l-4 border-l-danger bg-danger/10' : ''
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                        task.priority === 'High' ? 'bg-danger/20 text-danger' :
-                        task.priority === 'Medium' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+                        task.priority === 'High' ? 'bg-danger/15 text-rose-200 border border-danger/20' :
+                        task.priority === 'Medium' ? 'bg-warning/15 text-amber-200 border border-warning/20' : 'bg-success/15 text-emerald-200 border border-success/20'
                       }`}>{task.priority}</span>
                       {(userId && (task.assignedTo?._id === userId || currentProject.createdBy?._id === userId)) || !userId ? (
                         <select 
@@ -57,7 +60,7 @@ const TaskBoard = React.memo(({ columns, tasksByStatus, userId, currentProject, 
                         </span>
                       )}
                     </div>
-                    <h4 className="font-semibold text-sm mb-1">{task.title}</h4>
+                    <h4 className="font-semibold text-sm mb-1 text-textMain group-hover:text-cyan-200 transition-colors">{task.title}</h4>
                     <p className="text-xs text-textMuted line-clamp-2 mb-3">{task.description}</p>
 
                     <div className="flex items-center justify-between mt-auto">
@@ -67,13 +70,13 @@ const TaskBoard = React.memo(({ columns, tasksByStatus, userId, currentProject, 
                         </div>
                       ) : <div />}
                       {task.assignedTo && typeof task.assignedTo === 'object' && task.assignedTo.name ? (
-                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] text-white font-bold" title={`Assigned to ${task.assignedTo.name}`}>
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-[10px] text-white font-bold" title={`Assigned to ${task.assignedTo.name}`}>
                           {task.assignedTo.name.charAt(0).toUpperCase()}
                         </div>
                       ) : (
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleAssignTask(task._id); }}
-                          className="text-[10px] bg-secondary/10 text-secondary px-2 py-1 rounded hover:bg-secondary/20 transition-colors"
+                          className="text-[10px] bg-cyan-400/10 text-cyan-200 px-2 py-1 rounded hover:bg-cyan-400/20 transition-colors"
                         >
                           Assign Task
                         </button>
@@ -93,11 +96,11 @@ TaskBoard.displayName = 'TaskBoard';
 
 const ProgressTable = React.memo(({ projectMembers, memberTasksMap, id }) => (
   <div className="flex-1 space-y-6">
-    <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
+    <div className="panel rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-separate border-spacing-y-3 min-w-[700px]">
           <thead>
-            <tr className="bg-textMain/5 border-b border-textMain/10">
+            <tr className="bg-white/[0.04] border-b border-white/10">
               <th className="p-4 text-sm font-semibold text-textMuted">Member</th>
               <th className="p-4 text-sm font-semibold text-textMuted">Progress</th>
               <th className="p-4 text-sm font-semibold text-textMuted">Tasks</th>
@@ -112,7 +115,7 @@ const ProgressTable = React.memo(({ projectMembers, memberTasksMap, id }) => (
               const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
               return (
-                <tr key={member._id} className="border-b border-textMain/10 hover:bg-textMain/5 transition-colors">
+                <tr key={member._id} className="border-b border-white/10 hover:bg-white/[0.04] transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold">
@@ -206,14 +209,14 @@ const ProjectDetail = () => {
     }
   };
 
-  const handleStatusChange = (taskId, newStatus) => {
+  const handleStatusChange = useCallback((taskId, newStatus) => {
     dispatch(updateTaskStatus({ taskId, status: newStatus }));
-  };
+  }, [dispatch]);
 
-  const handleAssignTask = (taskId) => {
+  const handleAssignTask = useCallback((taskId) => {
     setTaskToAssign(taskId);
     setShowAssignModal(true);
-  };
+  }, []);
 
   const submitAssignment = (memberId) => {
     dispatch(updateTaskStatus({ taskId: taskToAssign, assignedTo: memberId }));
@@ -239,13 +242,11 @@ const ProjectDetail = () => {
     }
   };
 
-  if (isLoading || !currentProject) return <div className="p-8 text-textMuted">Loading project details...</div>;
-
   const columns = useMemo(() => ['Todo', 'In Progress', 'Review', 'Done'], []);
 
   const projectMembers = useMemo(() => [
-    ...(currentProject.members || []),
-    ...(currentProject.createdBy?._id && !(currentProject.members || []).some(member => member._id === currentProject.createdBy._id)
+    ...(currentProject?.members || []),
+    ...(currentProject?.createdBy?._id && !(currentProject?.members || []).some(member => member._id === currentProject.createdBy._id)
       ? [currentProject.createdBy]
       : [])
   ], [currentProject]);
@@ -274,28 +275,37 @@ const ProjectDetail = () => {
     }, {});
   }, [filteredTasks]);
 
+  if (isLoading || !currentProject) return (
+    <div className="space-y-4">
+      <div className="skeleton h-44 rounded-2xl" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map(item => <div key={item} className="skeleton h-80 rounded-2xl" />)}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6 flex flex-col min-h-full">
       {/* Header */}
-      <div className="glass rounded-3xl border border-textMain/10 p-6 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+      <div className="panel rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-6">
         <div className="space-y-4">
           <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-textMuted hover:text-primary mb-2 transition-colors">
             <FiArrowLeft /> Back to Projects
           </Link>
           <div className="space-y-3">
-            <h1 className="text-3xl font-bold textMain">{currentProject.name}</h1>
+            <h1 className="text-3xl font-semibold text-textMain">{currentProject.name}</h1>
             <p className="text-sm text-textMuted max-w-2xl">{currentProject.description}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Team Members</p>
               <p className="text-xl font-semibold text-textMain">{projectMembers.length}</p>
             </div>
-            <div className="rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-textMuted mb-2">Tasks</p>
               <p className="text-xl font-semibold text-textMain">{tasks.length}</p>
             </div>
-            <div className="relative rounded-2xl border border-textMain/10 bg-surface/70 p-4">
+            <div className="relative rounded-xl border border-white/10 bg-white/[0.04] p-4">
               <button
                 type="button"
                 onClick={() => setShowMembersList(prev => !prev)}
@@ -307,7 +317,7 @@ const ProjectDetail = () => {
                     <div
                       key={member._id}
                       title={member.name}
-                      className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-surface"
+                      className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-slate-950"
                     >
                       {member.name?.charAt(0).toUpperCase()}
                     </div>
@@ -321,15 +331,15 @@ const ProjectDetail = () => {
               </button>
 
               {showMembersList && (
-                <div className="absolute left-0 right-0 top-full mt-2 z-[120] overflow-hidden rounded-2xl border border-textMain/10 bg-surface shadow-2xl">
+                <div className="absolute left-0 right-0 top-full mt-2 z-[120] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl">
                   {projectMembers.map(member => (
                     <Link
                       key={member._id}
                       to={`/projects/${id}/member/${member._id}/progress`}
                       onClick={() => setShowMembersList(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-primary/10 transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-cyan-400/10 transition-colors"
                     >
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                         {member.name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -350,7 +360,7 @@ const ProjectDetail = () => {
             <>
               <button 
                 onClick={() => setShowMemberModal(true)}
-                className="flex items-center gap-2 bg-surface/70 text-textMain px-4 py-2 rounded-lg hover:bg-surface border border-textMain/15 transition-colors"
+                className="btn-muted flex items-center gap-2 px-4 py-2 rounded-lg"
               >
                 <FiUserPlus /> Add Member
               </button>
@@ -365,14 +375,14 @@ const ProjectDetail = () => {
           )}
           <Link 
             to={`/projects/${id}/member/${user?._id}/progress`}
-            className="flex items-center gap-2 bg-surface/70 border border-primary/25 text-textMain px-4 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+            className="btn-muted flex items-center gap-2 px-4 py-2 rounded-lg"
           >
             My Progress
           </Link>
           {(user?.role === 'Admin' || currentProject.createdBy?._id === user?._id) && (
             <button 
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+              className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
             >
               <FiPlus /> Add Task
             </button>
@@ -381,33 +391,33 @@ const ProjectDetail = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-textMain/10 bg-surface/70 p-2 sm:p-3">
+      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-slate-950/35 p-2 sm:p-3 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex overflow-hidden rounded-3xl bg-white/90 shadow-sm">
+          <div className="flex overflow-hidden rounded-xl bg-white/[0.04] border border-white/10 shadow-sm">
             <button 
               onClick={() => setActiveTab('board')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'board' ? 'bg-primary text-black' : 'text-textMuted hover:text-textMain'}`}
+              className={`px-5 py-2.5 text-sm font-medium transition-colors ${activeTab === 'board' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'text-textMuted hover:text-textMain hover:bg-white/[0.04]'}`}
             >
               Task Board
             </button>
             <button 
               onClick={() => setActiveTab('progress')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'progress' ? 'bg-primary text-black' : 'text-textMuted hover:text-textMain'}`}
+              className={`px-5 py-2.5 text-sm font-medium transition-colors ${activeTab === 'progress' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'text-textMuted hover:text-textMain hover:bg-white/[0.04]'}`}
             >
               Team Progress
             </button>
           </div>
           {user?.role !== 'Admin' && activeTab === 'board' && (
-            <div className="flex items-center gap-2 p-1 bg-surface/50 rounded-2xl border border-textMain/10">
+            <div className="flex items-center gap-2 p-1 bg-white/[0.04] rounded-xl border border-white/10">
               <button 
                 onClick={() => setViewMode('my-tasks')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'my-tasks' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'my-tasks' ? 'bg-primary text-slate-950 shadow-md' : 'text-textMuted hover:text-textMain'}`}
               >
                 My Tasks
               </button>
               <button 
                 onClick={() => setViewMode('team-board')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team-board' ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:text-textMain'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'team-board' ? 'bg-primary text-slate-950 shadow-md' : 'text-textMuted hover:text-textMain'}`}
               >
                 Team Board
               </button>
@@ -443,16 +453,16 @@ const ProjectDetail = () => {
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
                 <label className="block text-sm text-textMuted mb-1">Task Title</label>
-                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} className="field" />
               </div>
               <div>
                 <label className="block text-sm text-textMuted mb-1">Description</label>
-                <textarea rows="2" value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary"></textarea>
+                <textarea rows="2" value={description} onChange={e => setDescription(e.target.value)} className="field"></textarea>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-textMuted mb-1">Priority</label>
-                  <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary">
+                  <select value={priority} onChange={e => setPriority(e.target.value)} className="field">
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
@@ -460,7 +470,7 @@ const ProjectDetail = () => {
                 </div>
                 <div>
                   <label className="block text-sm text-textMuted mb-1">Assignee</label>
-                  <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary">
+                  <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="field">
                     <option value="">Unassigned</option>
                     {projectMembers.map(member => (
                       <option key={member._id} value={member._id}>{member.name}</option>
@@ -469,12 +479,12 @@ const ProjectDetail = () => {
                 </div>
                 <div className="sm:col-span-2 md:col-span-1">
                   <label className="block text-sm text-textMuted mb-1">Due Date</label>
-                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="field" />
                 </div>
               </div>
               <div className="flex gap-3 justify-end mt-6">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg text-textMuted hover:bg-surface">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">Add Task</button>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-muted px-4 py-2 rounded-lg">Cancel</button>
+                <button type="submit" className="btn-primary px-4 py-2 rounded-lg">Add Task</button>
               </div>
             </form>
           </motion.div>
@@ -489,11 +499,11 @@ const ProjectDetail = () => {
             <form onSubmit={handleAddMember} className="space-y-4">
               <div>
                 <label className="block text-sm text-textMuted mb-1">User Email</label>
-                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" className="field" />
               </div>
               <div className="flex gap-3 justify-end mt-6">
-                <button type="button" onClick={() => setShowMemberModal(false)} className="px-4 py-2 rounded-lg text-textMuted hover:bg-surface">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">Add Member</button>
+                <button type="button" onClick={() => setShowMemberModal(false)} className="btn-muted px-4 py-2 rounded-lg">Cancel</button>
+                <button type="submit" className="btn-primary px-4 py-2 rounded-lg">Add Member</button>
               </div>
             </form>
           </motion.div>
@@ -504,7 +514,7 @@ const ProjectDetail = () => {
       {showAssignModal && (
         <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass w-full max-w-sm p-6 rounded-2xl shadow-2xl">
-            <h2 className="text-xl font-bold mb-4 textMain">Assign Task</h2>
+            <h2 className="text-xl font-bold mb-4 text-textMain">Assign Task</h2>
             <p className="text-sm text-textMuted mb-6">Select a team member to assign this task to:</p>
             
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
@@ -520,7 +530,7 @@ const ProjectDetail = () => {
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold textMain">{member.name}</p>
+                        <p className="text-sm font-semibold text-textMain">{member.name}</p>
                         <p className="text-xs text-textMuted">{member.email}</p>
                       </div>
                     </button>
@@ -534,7 +544,7 @@ const ProjectDetail = () => {
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold textMain">Assign to Me (Admin)</p>
+                        <p className="text-sm font-semibold text-textMain">Assign to Me (Admin)</p>
                         <p className="text-xs text-textMuted">Keep this task for yourself</p>
                       </div>
                     </button>
@@ -545,7 +555,7 @@ const ProjectDetail = () => {
                   <p className="text-sm text-textMuted mb-4">No members in this project yet.</p>
                   <button 
                     onClick={() => submitAssignment(user._id)}
-                    className="w-full bg-primary text-white py-3 rounded-xl hover:bg-primary/90 transition-colors"
+                    className="btn-primary w-full py-3 rounded-xl"
                   >
                     Assign to Me (Admin)
                   </button>

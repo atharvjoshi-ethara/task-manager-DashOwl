@@ -10,12 +10,12 @@ export default {
       colors: {
         background: 'rgb(var(--bg-main) / <alpha-value>)',
         surface: 'rgb(var(--bg-surface) / <alpha-value>)',
-        primary: '#2563eb', // Blue
-        secondary: '#1e40af', // Dark blue
-        accent: '#3b82f6',
-        danger: '#ef4444',
-        success: '#10b981',
-        warning: '#fbbf24',
+        primary: '#06b6d4',
+        secondary: '#2563eb',
+        accent: '#38bdf8',
+        danger: '#f43f5e',
+        success: '#22c55e',
+        warning: '#f59e0b',
         textMain: 'rgb(var(--text-main) / <alpha-value>)',
         textMuted: 'rgb(var(--text-muted) / <alpha-value>)'
       },

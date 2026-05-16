@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import api from '../utils/api';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiShield, FiTrash2 } from 'react-icons/fi';
+import { FiMail, FiShield, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-
-const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
 const Team = () => {
   const [team, setTeam] = useState([]);
@@ -17,18 +15,15 @@ const Team = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/users');
         setTeam(res.data);
       } catch (error) {
-        console.error('Failed to fetch team');
+        console.error('Failed to fetch team:', error);
       } finally {
         setIsLoading(false);
       }
     };
     if (user?.role === 'Admin') fetchTeam();
-    else setIsLoading(false);
   }, [token, user]);
 
   const handleDeleteMember = async (member) => {
@@ -42,9 +37,7 @@ const Team = () => {
     }
 
     try {
-      await axios.delete(`${API_URL}/users/${member._id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/users/${member._id}`);
       setTeam(prevTeam => prevTeam.filter(teamMember => teamMember._id !== member._id));
       toast.success('Team member deleted successfully');
     } catch (error) {
@@ -64,26 +57,26 @@ const Team = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-2 md:p-6 max-w-6xl mx-auto space-y-6">
-      <div className="glass rounded-3xl p-6 border border-textMain/10 shadow-sm">
+      <div className="panel rounded-2xl p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-textMain">Team Directory</h1>
+            <h1 className="text-3xl font-semibold text-textMain">Team Directory</h1>
             <p className="text-sm text-textMuted">Manage all members of your organization.</p>
           </div>
           <button 
           onClick={() => setShowInvite(true)}
-          className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+          className="btn-primary px-4 py-2 rounded-lg"
         >
           Invite Member
         </button>
       </div>
     </div>
 
-      <div className="glass rounded-3xl overflow-hidden border border-textMain/10 shadow-sm">
+      <div className="panel rounded-2xl overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-separate border-spacing-y-3 min-w-[600px]">
             <thead>
-              <tr className="bg-textMain/5 border-b border-textMain/10">
+              <tr className="bg-white/[0.04] border-b border-white/10">
                 <th className="p-4 text-sm font-semibold text-textMuted">Member</th>
                 <th className="p-4 text-sm font-semibold text-textMuted">Role</th>
                 <th className="p-4 text-sm font-semibold text-textMuted">Joined</th>
@@ -92,9 +85,9 @@ const Team = () => {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan="4" className="p-4 text-center text-textMuted">Loading...</td></tr>
+                <tr><td colSpan="4" className="p-6"><div className="skeleton h-12 rounded-xl" /></td></tr>
               ) : team.map(member => (
-                <tr key={member._id} className="border-b border-textMain/10 hover:bg-textMain/5 transition-colors">
+                <tr key={member._id} className="border-b border-white/10 hover:bg-white/[0.04] transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       {member.avatar ? (
@@ -111,7 +104,7 @@ const Team = () => {
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.role === 'Admin' ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.role === 'Admin' ? 'bg-blue-400/15 text-blue-200 border border-blue-300/20' : 'bg-cyan-400/15 text-cyan-200 border border-cyan-300/20'}`}>
                       {member.role}
                     </span>
                   </td>
@@ -149,11 +142,11 @@ const Team = () => {
             }} className="space-y-4">
               <div>
                 <label className="block text-sm text-textMuted mb-1">Email Address</label>
-                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@company.com" className="w-full bg-surface border border-textMain/10 rounded-lg p-3 text-textMain focus:outline-none focus:border-primary" />
+                <input required type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@company.com" className="field" />
               </div>
               <div className="flex gap-3 justify-end mt-6">
-                <button type="button" onClick={() => setShowInvite(false)} className="px-4 py-2 rounded-lg text-textMuted hover:bg-surface">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">Send Invite</button>
+                <button type="button" onClick={() => setShowInvite(false)} className="btn-muted px-4 py-2 rounded-lg">Cancel</button>
+                <button type="submit" className="btn-primary px-4 py-2 rounded-lg">Send Invite</button>
               </div>
             </form>
           </motion.div>

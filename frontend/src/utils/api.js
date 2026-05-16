@@ -6,6 +6,7 @@ const API_URL = import.meta.env.PROD
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
 });
 
 // Add a request interceptor to attach the token
@@ -16,5 +17,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

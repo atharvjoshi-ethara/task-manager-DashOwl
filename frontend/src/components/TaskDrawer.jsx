@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiMessageSquare, FiSend, FiClock, FiUser } from 'react-icons/fi';
 import { addTaskComment, updateTaskStatus } from '../store/projectSlice';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 const TaskDrawer = ({ taskId, onClose, columns }) => {
   const [commentText, setCommentText] = useState('');
@@ -41,10 +41,10 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
           animate={{ x: 0 }} 
           exit={{ x: '100%' }} 
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full sm:max-w-md bg-background border-l border-textMain/10 shadow-2xl h-full flex flex-col z-10"
+          className="relative w-full sm:max-w-md bg-slate-950/95 border-l border-white/10 shadow-2xl h-full flex flex-col z-10 backdrop-blur-xl"
         >
           {/* Header */}
-          <div className="p-6 border-b border-textMain/10 flex items-start justify-between bg-surface/50">
+          <div className="p-6 border-b border-white/10 flex items-start justify-between bg-white/[0.04]">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className={`text-xs px-2 py-0.5 rounded font-medium ${
@@ -57,7 +57,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
               </div>
               <h2 className="text-xl font-bold text-textMain leading-tight">{task.title}</h2>
             </div>
-            <button onClick={onClose} className="p-2 bg-surface hover:bg-textMain/10 rounded-full text-textMuted transition-colors">
+            <button onClick={onClose} className="p-2 bg-white/[0.05] hover:bg-white/10 rounded-full text-textMuted transition-colors">
               <FiX size={20} />
             </button>
           </div>
@@ -66,7 +66,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
             {/* Task Info */}
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-surface rounded-xl p-3 border border-textMain/10">
+                <div className="bg-white/[0.04] rounded-xl p-3 border border-white/10">
                   <p className="text-xs text-textMuted mb-1">Status</p>
                   <select 
                     value={task.status}
@@ -76,7 +76,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
                     {columns.map(c => <option key={c} value={c} className="bg-surface text-textMain">{c}</option>)}
                   </select>
                 </div>
-                <div className="bg-surface rounded-xl p-3 border border-textMain/10">
+                <div className="bg-white/[0.04] rounded-xl p-3 border border-white/10">
                   <p className="text-xs text-textMuted mb-1">Assignee</p>
                   <div className="flex items-center gap-2">
                     {task.assignedTo ? (
@@ -95,7 +95,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
 
               <div>
                 <h3 className="text-sm font-semibold text-textMain mb-2">Description</h3>
-                <div className="bg-surface rounded-xl p-4 border border-textMain/10 min-h-[100px]">
+                <div className="bg-white/[0.04] rounded-xl p-4 border border-white/10 min-h-[100px]">
                   <p className="text-sm text-textMuted whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-secondary to-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
                       {comment.user?.name?.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1 bg-surface rounded-2xl rounded-tl-none p-3 border border-textMain/10">
+                    <div className="flex-1 bg-white/[0.04] rounded-2xl rounded-tl-none p-3 border border-white/10">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-semibold text-textMain">{comment.user?.name}</span>
                         <span className="text-[10px] text-textMuted">{format(new Date(comment.createdAt), 'MMM dd, h:mm a')}</span>
@@ -129,9 +129,9 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
           </div>
 
           {/* Comment Input */}
-          <div className="p-4 border-t border-textMain/10 bg-surface/50">
+          <div className="p-4 border-t border-white/10 bg-white/[0.04]">
             <form onSubmit={handleComment} className="flex items-end gap-2">
-              <div className="flex-1 bg-surface border border-textMain/10 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <div className="flex-1 bg-slate-950/50 border border-white/10 rounded-xl focus-within:border-cyan-400/70 focus-within:ring-2 focus-within:ring-cyan-400/10 transition-colors overflow-hidden">
                 <textarea 
                   value={commentText}
                   onChange={e => setCommentText(e.target.value)}
@@ -143,7 +143,7 @@ const TaskDrawer = ({ taskId, onClose, columns }) => {
               <button 
                 type="submit" 
                 disabled={!commentText.trim()}
-                className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:hover:bg-primary shrink-0 mb-0.5"
+                className="btn-primary w-10 h-10 rounded-xl flex items-center justify-center disabled:opacity-50 shrink-0 mb-0.5"
               >
                 <FiSend size={16} />
               </button>

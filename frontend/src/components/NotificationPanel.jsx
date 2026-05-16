@@ -1,16 +1,16 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { FiBell, FiCheck, FiTrash2, FiX, FiInfo } from 'react-icons/fi';
+import { FiBell, FiCheck, FiX, FiInfo } from 'react-icons/fi';
 import { markAsRead, markAllRead } from '../store/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
 
 const NotificationPanel = ({ onClose }) => {
   const dispatch = useDispatch();
-  const { notifications, loading } = useSelector((state) => state.notifications);
-  const panelRef = React.useRef(null);
+  const { notifications } = useSelector((state) => state.notifications);
+  const panelRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
         onClose();
@@ -34,9 +34,9 @@ const NotificationPanel = ({ onClose }) => {
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-surface border border-textMain/10 rounded-2xl shadow-2xl overflow-hidden z-[120]"
+      className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-slate-950/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[120] backdrop-blur-xl"
     >
-      <div className="p-4 border-b border-textMain/10 flex items-center justify-between bg-surface/50 backdrop-blur-md sticky top-0">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.04] backdrop-blur-md sticky top-0">
         <div className="flex items-center gap-2">
           <FiBell className="text-primary" />
           <h3 className="font-bold text-textMain">Notifications</h3>
@@ -50,7 +50,7 @@ const NotificationPanel = ({ onClose }) => {
               Mark all as read
             </button>
           )}
-          <button onClick={onClose} className="p-1 hover:bg-textMain/5 rounded-lg text-textMuted">
+          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-lg text-textMuted">
             <FiX size={18} />
           </button>
         </div>
@@ -65,12 +65,12 @@ const NotificationPanel = ({ onClose }) => {
             <p className="text-textMuted text-sm font-medium">No notifications yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-textMain/5">
+          <div className="divide-y divide-white/5">
             {notifications.map((notification) => (
               <div
                 key={notification._id}
                 className={`p-4 transition-colors relative group ${
-                  !notification.isRead ? 'bg-primary/5' : 'hover:bg-textMain/5'
+                  !notification.isRead ? 'bg-cyan-400/5' : 'hover:bg-white/[0.04]'
                 }`}
               >
                 <div className="flex gap-3">
@@ -108,7 +108,7 @@ const NotificationPanel = ({ onClose }) => {
       </div>
 
       {notifications.length > 0 && (
-        <div className="p-3 bg-textMain/5 border-t border-textMain/10 text-center">
+        <div className="p-3 bg-white/[0.04] border-t border-white/10 text-center">
           <button className="text-xs text-textMuted hover:text-primary font-medium transition-colors">
             View all notifications
           </button>
